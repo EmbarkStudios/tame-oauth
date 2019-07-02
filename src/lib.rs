@@ -7,13 +7,9 @@ extern crate failure;
 extern crate serde;
 
 #[cfg(feature = "gcp")]
-mod gcp;
+pub mod gcp;
 
 mod error;
 mod token;
 
-pub use error::Error;
-pub use token::Token;
-
-#[cfg(feature = "gcp")]
-pub use gcp::{RequestReason, ServiceAccountAccess, ServiceAccountInfo, TokenOrRequest};
+pub use crate::{error::Error, token::Token};

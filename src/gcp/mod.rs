@@ -2,11 +2,13 @@ use crate::{
     error::{self, Error},
     token::Token,
 };
-//use jsonwebtoken::{Algorithm, Header, Key};
 
 mod jwt;
-
 use jwt::{Algorithm, Header, Key};
+
+pub mod prelude {
+    pub use super::{RequestReason, ServiceAccountAccess, ServiceAccountInfo, TokenOrRequest};
+}
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
