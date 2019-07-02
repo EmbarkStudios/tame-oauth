@@ -16,7 +16,7 @@ chrono = "0.4.7"
 failure = "0.1.5"
 http = "0.1.17"
 #jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "3c62b98", optional = true }
-jsonwebtoken = { path = "vendor/jsonwebtoken", version = "7.0.0", optional = true }
+jsonwebtoken = { path = "vendor/jsonwebtoken", version = "6.0.1", optional = true }
 lock_api = "0.2.0"
 parking_lot = "0.8.0"
 serde = { version = "1.0.94", features = [ "derive" ] }
