@@ -33,7 +33,7 @@ untrusted = { version = "0.6.2", optional = true }
 url = { version = "1.7.2", optional = true }
 
 [dev-dependencies]
-reqwest = { version = "0.9.18", default-features = false, features = [ "rustls" ] }
+reqwest = { version = "0.9.18", default-features = false, features = [ "rustls-tls" ] }
 
 [features]
 default = ["gcp"]
