@@ -37,4 +37,5 @@ reqwest = { version = "0.9.18", default-features = false, features = [ "rustls" 
 
 [features]
 default = ["gcp"]
-gcp = ["ring", "untrusted", "url"]
+gcp = ["jwt", "url"]
+jwt = ["ring", "untrusted"]

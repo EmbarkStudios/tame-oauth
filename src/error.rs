@@ -2,13 +2,11 @@
 pub enum Error {
     #[fail(display = "{}", _0)]
     Io(#[fail(cause)] std::io::Error),
+    #[cfg(feature = "jwt")]
     #[fail(display = "The key format is invalid or unknown")]
     InvalidKeyFormat,
     #[fail(display = "{}", _0)]
     Base64Decode(#[fail(cause)] base64::DecodeError),
-    // #[cfg(feature = "gcp")]
-    // #[fail(display = "{}", _0)]
-    // Jwt(#[fail(cause)] jsonwebtoken::errors::Error),
     #[fail(display = "{}", _0)]
     Http(#[fail(cause)] http::Error),
     #[fail(display = "HTTP error status: {}", _0)]
@@ -17,7 +15,7 @@ pub enum Error {
     Json(#[fail(cause)] serde_json::Error),
     #[fail(display = "Auth error {}", _0)]
     AuthError(#[fail(cause)] AuthError),
-    #[cfg(feature = "gcp")]
+    #[cfg(feature = "jwt")]
     #[fail(display = "RSA key is invalid")]
     InvalidRsaKey,
 }
