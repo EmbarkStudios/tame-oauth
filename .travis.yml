@@ -1,0 +1,75 @@
+language: rust
+
+stages:
+- test
+- name: deploy
+  if: tag =~ /^\d+\.\d+\.\d+.*$/
+
+env:
+  global:
+  - RUST_BACKTRACE=1
+
+# See http://www.garbers.co.za/2017/11/01/code-folding-and-timing-in-travis-ci/
+before_script:
+- export -f travis_nanoseconds
+- export -f travis_fold
+- export -f travis_time_start
+- export -f travis_time_finish
+
+matrix:
+  allow_failures:
+  - env: NIGHTLY=1
+  fast_finish: true
+  include:
+  #  _      _       _   
+  # | |    (_)     | |  
+  # | |     _ _ __ | |_ 
+  # | |    | | '_ \| __|
+  # | |____| | | | | |_ 
+  # |______|_|_| |_|\__|
+  - name: "stable lint"
+    stage: test
+    rust: stable
+    os: linux
+    script: .ci/lint.sh
+
+  - name: "beta lint"
+    stage: test
+    rust: beta
+    os: linux
+    script: .ci/lint.sh
+
+  #  _______        _   
+  # |__   __|      | |  
+  #    | | ___  ___| |_ 
+  #    | |/ _ \/ __| __|
+  #    | |  __/\__ \ |_ 
+  #    |_|\___||___/\__|
+  - name: "stable test linux"
+    stage: test
+    rust: stable
+    os: linux
+    script: .ci/test.sh
+
+  - name: "beta test linux"
+    stage: test
+    rust: beta
+    os: linux
+    script: .ci/test.sh
+
+  - name: "nightly test linux"
+    stage: test
+    rust: nightly
+    script: .ci/test.sh
+    env:
+    - NIGHTLY=1
+
+  - name: "stable test osx"
+    rust: stable
+    os: osx
+    script: .ci/test.sh
+
+  - name: "stable test windows"
+    rust: stable
+    os: windows
+    script: .ci/test.sh
