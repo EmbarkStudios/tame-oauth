@@ -5,7 +5,7 @@
 #[macro_use(Fail)]
 extern crate failure;
 #[macro_use(Deserialize)]
-#[cfg_attr(feature = "gcp", macro_use(Serialize))]
+//#[cfg_attr(feature = "gcp", macro_use(Serialize))]
 extern crate serde;
 
 #[cfg(feature = "gcp")]
@@ -22,5 +22,5 @@ pub use gcp::{RequestReason, ServiceAccountAccess, ServiceAccountInfo, TokenOrRe
 
 // As we are dependent on a fork of jsonwebtoken, expose it publicly so that
 // downstream crates don't have to patch it themselves
-#[cfg(feature = "gcp")]
-pub use jsonwebtoken;
+// #[cfg(feature = "gcp")]
+// pub use jsonwebtoken;

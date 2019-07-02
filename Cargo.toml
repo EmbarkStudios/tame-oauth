@@ -16,12 +16,13 @@ chrono = "0.4.7"
 failure = "0.1.5"
 http = "0.1.17"
 #jsonwebtoken = { git = "https://github.com/Keats/jsonwebtoken.git", rev = "3c62b98", optional = true }
-jsonwebtoken = { path = "vendor/jsonwebtoken", version = "6.0.1", optional = true }
 lock_api = "0.2.0"
 parking_lot = "0.8.0"
+ring = { version = "0.14.6", optional = true }
 serde = { version = "1.0.94", features = [ "derive" ] }
 serde_json = "1.0.40"
 twox-hash = { version = "1.4.1", default-features = false }
+untrusted = { version = "0.6.0", optional = true }
 url = { version = "1.7.2", optional = true }
 
 [dev-dependencies]
@@ -29,4 +30,4 @@ reqwest = { version = "0.9.18", default-features = false, features = [ "rustls" 
 
 [features]
 default = ["gcp"]
-gcp = ["jsonwebtoken", "url"]
+gcp = ["ring", "untrusted", "url"]

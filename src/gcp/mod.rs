@@ -2,9 +2,11 @@ use crate::{
     error::{self, Error},
     token::Token,
 };
-use jsonwebtoken::{Algorithm, Header, Key};
+//use jsonwebtoken::{Algorithm, Header, Key};
 
 mod jwt;
+
+use jwt::{Algorithm, Header, Key};
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
@@ -153,7 +155,7 @@ impl ServiceAccountAccess {
             sub: None,
         };
 
-        let assertion = jsonwebtoken::encode(
+        let assertion = jwt::encode(
             &Header::new(Algorithm::RS256),
             &claims,
             Key::Pkcs8(&self.priv_key),

@@ -6,9 +6,9 @@ pub enum Error {
     InvalidKeyFormat,
     #[fail(display = "{}", _0)]
     Base64Decode(#[fail(cause)] base64::DecodeError),
-    #[cfg(feature = "gcp")]
-    #[fail(display = "{}", _0)]
-    Jwt(#[fail(cause)] jsonwebtoken::errors::Error),
+    // #[cfg(feature = "gcp")]
+    // #[fail(display = "{}", _0)]
+    // Jwt(#[fail(cause)] jsonwebtoken::errors::Error),
     #[fail(display = "{}", _0)]
     Http(#[fail(cause)] http::Error),
     #[fail(display = "HTTP error status: {}", _0)]
@@ -17,6 +17,9 @@ pub enum Error {
     Json(#[fail(cause)] serde_json::Error),
     #[fail(display = "Auth error {}", _0)]
     AuthError(#[fail(cause)] AuthError),
+    #[cfg(feature = "gcp")]
+    #[fail(display = "RSA key is invalid")]
+    InvalidRsaKey,
 }
 
 impl From<base64::DecodeError> for Error {
@@ -37,12 +40,12 @@ impl From<serde_json::Error> for Error {
     }
 }
 
-#[cfg(feature = "gcp")]
-impl From<jsonwebtoken::errors::Error> for Error {
-    fn from(e: jsonwebtoken::errors::Error) -> Self {
-        Error::Jwt(e)
-    }
-}
+// #[cfg(feature = "gcp")]
+// impl From<jsonwebtoken::errors::Error> for Error {
+//     fn from(e: jsonwebtoken::errors::Error) -> Self {
+//         Error::Jwt(e)
+//     }
+// }
 
 #[derive(Deserialize, Debug, Fail)]
 #[fail(display = "Auth error {:?}", error_description)]
