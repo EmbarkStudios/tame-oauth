@@ -16,12 +16,18 @@ const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 /// for token acquisition
 #[derive(Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
+    /// The private key we use to sign
     pub private_key: String,
+    /// The unique id used as the issuer of the JWT claim
     pub client_email: String,
+    /// The URI we send the token requests to, eg https://oauth2.googleapis.com/token
     pub token_uri: String,
 }
 
 impl ServiceAccountInfo {
+    /// Deserializes service account from a byte slice. This data
+    /// is typically acquired by reading a service account JSON file
+    /// from disk
     pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
     where
         T: AsRef<[u8]>,
@@ -34,7 +40,6 @@ impl ServiceAccountInfo {
 }
 
 struct Entry {
-    /// Hash of the _ordered_ scopes
     hash: u64,
     token: Token,
 }
@@ -51,10 +56,16 @@ pub enum RequestReason {
 /// can be used to acquire one
 #[derive(Debug)]
 pub enum TokenOrRequest {
+    /// A valid token that can be supplied in an API request
     Token(Token),
     Request {
+        /// The parts of an HTTP request that must be sent
+        /// to acquire the token, in the client of your choice
         request: http::Request<Vec<u8>>,
+        /// The reason we need to retrieve a new token
         reason: RequestReason,
+        /// An opaque hash of the scope(s) for which the request
+        /// was constructed
         scope_hash: u64,
     },
 }
@@ -71,8 +82,7 @@ unsafe impl RawMutex for RawSpinlock {
     type GuardMarker = GuardSend;
 
     fn lock(&self) {
-        // Note: This isn't the best way of implementing a spinlock, but it
-        // suffices for the sake of this example.
+        // Note: This isn't the best way of implementing a spinlock
         while !self.try_lock() {}
     }
 
@@ -86,9 +96,8 @@ unsafe impl RawMutex for RawSpinlock {
 }
 
 type Spinlock<T> = lock_api::Mutex<RawSpinlock, T>;
-//type SpinlockGuard<'a, T> = lock_api::MutexGuard<'a, RawSpinlock, T>;
 
-/// A key provider for a GCP service account.
+/// A token provider for a GCP service account.
 pub struct ServiceAccountAccess {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
@@ -96,6 +105,8 @@ pub struct ServiceAccountAccess {
 }
 
 impl ServiceAccountAccess {
+    /// Creates a new `ServiceAccountAccess` given the provided service
+    /// account info. This can fail if the private key is encoded correctly.
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
         let key_string = info
             .private_key
@@ -121,6 +132,12 @@ impl ServiceAccountAccess {
         })
     }
 
+    /// Attempts to retrieve a token that can be used in an API request, if we haven't
+    /// already retrieved a token for the specified scopes, or the token has expired,
+    /// an HTTP request is returned that can be used to retrieve a token.
+    ///
+    /// Note that the scopes are not sorted or in any other way manipulated, so any
+    /// modifications to them will require a new token to be requested.
     pub fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
@@ -150,7 +167,6 @@ impl ServiceAccountAccess {
         let claims = jwt::Claims {
             issuer: self.info.client_email.clone(),
             scope: scopes,
-            //"https://www.googleapis.com/oauth2/v4/token".to_owned()
             audience: self.info.token_uri.clone(),
             expiration: expiry,
             issued_at: issued,
@@ -187,6 +203,10 @@ impl ServiceAccountAccess {
         })
     }
 
+    /// Once a response has been received for a token request, call this
+    /// method to deserialize the token and store it in the cache so that
+    /// future API requests don't have to retrieve a new token, until it
+    /// expires.
     pub fn parse_token_response<S>(
         &self,
         hash: u64,
@@ -237,6 +257,8 @@ impl ServiceAccountAccess {
         Ok(token)
     }
 
+    /// Hashes a set of scopes to a numeric key we can use to have an in-memory
+    /// cache of scopes -> token
     fn serialize_scopes<'a, I, S>(scopes: I) -> (u64, String)
     where
         S: AsRef<str> + 'a,
@@ -258,8 +280,11 @@ impl ServiceAccountAccess {
 /// This is the schema of the server's response.
 #[derive(Deserialize, Debug)]
 struct TokenResponse {
+    /// The actual token
     access_token: String,
+    /// The token type, pretty much always Header
     token_type: String,
+    /// The time until the token expires and a new one needs to be requested
     expires_in: i64,
 }
 
