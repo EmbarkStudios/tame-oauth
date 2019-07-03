@@ -9,6 +9,7 @@ documentation = "https://docs.rs/tame-oauth"
 homepage = "https://github.com/EmbarkStudios/tame-oauth"
 repository = "https://github.com/EmbarkStudios/tame-oauth"
 keywords = ["oauth", "tame", "sans-io", "gcp"]
+readme = "README.md"
 
 [badges]
 travis-ci = { repository = "EmbarkStudios/tame-oauth", branch = "master" }
@@ -16,6 +17,7 @@ maintenance = { status = "actively-developed" }
 
 [lib]
 doctest = false
+path = "src/lib.rs"
 
 [dependencies]
 base64 = "0.10.1"
