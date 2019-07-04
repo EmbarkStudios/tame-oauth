@@ -4,7 +4,7 @@ use chrono::{offset::TimeZone, DateTime, Utc};
 ///
 /// It is produced by all authentication flows.
 /// It authenticates certain operations, and must be refreshed once
-/// it reached it's expiry date.
+/// it reached its expiry date.
 ///
 /// The type is tuned to be suitable for direct de-serialization from server
 /// replies, as well as for serialization for later reuse. This is the reason

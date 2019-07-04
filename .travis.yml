@@ -73,3 +73,21 @@ matrix:
     rust: stable
     os: windows
     script: .ci/test.sh
+
+  #  _____       _     _ _     _     
+  # |  __ \     | |   | (_)   | |    
+  # | |__) |   _| |__ | |_ ___| |__  
+  # |  ___/ | | | '_ \| | / __| '_ \ 
+  # | |   | |_| | |_) | | \__ \ | | |
+  # |_|    \__,_|_.__/|_|_|___/_| |_|
+  - stage: deploy
+    rust: stable
+    os: linux
+    script: echo "deploying $TRAVIS_TAG to crates.io"
+    deploy:
+      provider: cargo
+      token:
+        secure: hdeE47YTFWtH0AlPe0KJoUX/rhATsG2McNS5Vnl4cQDYqlvJkwWKnwuN5/f1CfcQcIWHhGbwJqur2gstLpwgHz9FL+SsbZra6PqdQJc+IsyEbSoFYeS7WEuz0t3WN9swHw3iEj6WYeNdAGYk/00/eyaVh7PG3Yc/t4ZPpJNntiVfAzEZFaRvaHFQqasA/DIFnmNGp4l4WYi29sFQ6ykCN+7oYsnowSnjRcA7MjrcuijNo5tUGX6K328awIZLW5ptix8PGFDLkQ/R5S/Bf56LfaunQP6HLnx4qtpXN4LxyrOxbzyjMxWySvvMHvZrR4cK4p+z6o4hqAzg0Gvx1mA29VGuIT5blbcndRHUC2gq4W2NpS5UH/PtZiKrkp+vCTmyQvbSGCNajpvNmJi7fs4+lRSCCFy11lJS+D0pgqEQzgFHr8L+7p2qYD0VRQ2+64k/FuMElTsjM9KUfKxg/oDaOoQoE3gqFYEYUPJUQdNfxStFYfJi7rKWFAJWR0CueZWp0+UX5NP0t+rkLNxtaqb1M5E8O2KpcYetem5eUZtT1jgmZvGK9V9PkpYysuoc50W7ewV5Cjzk5xR6JQUft4zzyPnE2PuJLU6huFfjZc2NZVgg6zp3LnX8aIBEIAqIbxB8RbhDeyfNtOUhpn8I7qLlAbq5VosGtHOzm8OJqvyg5Rg=
+      on:
+        repo: EmbarkStudios/tame-oauth
+        tags: true
