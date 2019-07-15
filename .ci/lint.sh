@@ -28,3 +28,17 @@ travis_fold start "clippy"
         cargo clippy -- -D warnings
     travis_time_finish
 travis_fold end "clippy"
+
+# Ensure we aren't accidentally using dependencies
+# we don't want
+deny_version=0.2.5
+name="cargo-deny-$deny_version-x86_64-unknown-linux-musl"
+travis_fold start "cargo-deny"
+    travis_time_start
+        curl -L --output archive.tar.gz https://github.com/EmbarkStudios/cargo-deny/releases/download/$deny_version/$name.tar.gz
+        tar -zxvf archive.tar.gz $name/cargo-deny
+        rm archive.tar.gz
+
+        $name/cargo-deny check
+    travis_time_finish
+travis_fold end "cargo-deny"
