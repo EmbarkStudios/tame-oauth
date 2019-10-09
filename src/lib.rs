@@ -27,8 +27,8 @@
 //!
 //! Usage: `cargo run --example svc_account -- <key_path> <scope..>`
 //!
-//! A small example of using `tame-oauth` together with [reqwest](). Given a key file and 1 or more scopes,
-//! it will attempt to get a token that you could be used to access resources in those scopes.
+//! A small example of using `tame-oauth` together with [reqwest](https://github.com/seanmonstar/reqwest). Given a key
+//! file and 1 or more scopes, it will attempt to get a token that you could be used to access resources in those scopes.
 //!
 //! `cargo run --example svc_account -- ~/.secrets/super-sekret.json https://www.googleapis.com/auth/pubsub https://www.googleapis.com/auth/devstorage.read_only`
 //!
