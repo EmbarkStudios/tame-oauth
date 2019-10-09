@@ -139,8 +139,9 @@ fn sign_rsa(
     signing_input: &str,
 ) -> Result<String, Error> {
     let key_pair = match key {
-        Key::Pkcs8(bytes) => signature::RsaKeyPair::from_pkcs8(untrusted::Input::from(bytes))
-            .map_err(|_| Error::InvalidRsaKey)?,
+        Key::Pkcs8(bytes) => {
+            signature::RsaKeyPair::from_pkcs8(bytes).map_err(|_| Error::InvalidRsaKey)?
+        }
     };
 
     let key_pair = std::sync::Arc::new(key_pair);
