@@ -1,32 +1,104 @@
-use err_derive::Error as Err;
+use std::{error::Error as Err, fmt};
 
-#[derive(Err, Debug)]
+#[derive(Debug)]
 pub enum Error {
-    #[error(display = "{}", _0)]
-    Io(#[error(cause)] std::io::Error),
+    Io(std::io::Error),
     #[cfg(feature = "jwt")]
-    #[error(display = "The key format is invalid or unknown")]
     InvalidKeyFormat,
-    #[error(display = "{}", _0)]
-    Base64Decode(#[error(cause)] base64::DecodeError),
-    #[error(display = "{}", _0)]
-    Http(#[error(cause)] http::Error),
-    #[error(display = "HTTP error status: {}", _0)]
+    Base64Decode(base64::DecodeError),
+    Http(http::Error),
     HttpStatus(http::StatusCode),
-    #[error(display = "{}", _0)]
-    Json(#[error(cause)] serde_json::Error),
-    #[error(display = "Auth error {}", _0)]
-    AuthError(#[error(cause)] AuthError),
+    Json(serde_json::Error),
+    AuthError(AuthError),
     #[cfg(feature = "jwt")]
-    #[error(display = "RSA key is invalid")]
     InvalidRsaKey,
 }
 
-#[derive(serde::Deserialize, Debug, Err)]
-#[error(display = "Auth error {:?}", error_description)]
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Error::*;
+
+        match self {
+            Io(err) => write!(f, "{}", err),
+            #[cfg(feature = "jwt")]
+            InvalidKeyFormat => f.write_str("The key format is invalid or unknown"),
+            Base64Decode(err) => write!(f, "{}", err),
+            Http(err) => write!(f, "{}", err),
+            HttpStatus(sc) => write!(f, "HTTP error status: {}", sc),
+            Json(err) => write!(f, "{}", err),
+            AuthError(err) => write!(f, "{}", err),
+            #[cfg(feature = "jwt")]
+            InvalidRsaKey => f.write_str("RSA key is invalid"),
+        }
+    }
+}
+
+impl std::error::Error for Error {
+    fn cause(&self) -> Option<&dyn Err> {
+        use Error::*;
+
+        match self {
+            Io(err) => Some(err as &dyn Err),
+            Base64Decode(err) => Some(err as &dyn Err),
+            Http(err) => Some(err as &dyn Err),
+            Json(err) => Some(err as &dyn Err),
+            AuthError(err) => Some(err as &dyn Err),
+            _ => None,
+        }
+    }
+
+    fn source(&self) -> Option<&(dyn Err + 'static)> {
+        use Error::*;
+
+        match self {
+            Io(err) => Some(err as &dyn Err),
+            Base64Decode(err) => Some(err as &dyn Err),
+            Http(err) => Some(err as &dyn Err),
+            Json(err) => Some(err as &dyn Err),
+            AuthError(err) => Some(err as &dyn Err),
+            _ => None,
+        }
+    }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(e: base64::DecodeError) -> Self {
+        Error::Base64Decode(e)
+    }
+}
+
+impl From<http::Error> for Error {
+    fn from(e: http::Error) -> Self {
+        Error::Http(e)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::Json(e)
+    }
+}
+
+#[derive(serde::Deserialize, Debug)]
 pub struct AuthError {
     /// Top level error type
     error: Option<String>,
     /// More specific details on the error
     error_description: Option<String>,
 }
+
+impl fmt::Display for AuthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(ref err) = self.error {
+            write!(f, "{}", err)?;
+
+            if let Some(ref desc) = self.error_description {
+                write!(f, "desc: {}", desc)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl std::error::Error for AuthError {}

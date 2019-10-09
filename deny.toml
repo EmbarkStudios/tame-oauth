@@ -19,9 +19,7 @@ skip = [
     # too many things still use ancient (slow to compile!) versions of winapi
     { name = "winapi", version = "=0.2.8" },
 
-    # err-derive uses skeptic as a build-dependency, which brings in
-    # an unfortunate number of dependencies
-    { name = "rand", version = "=0.4.6" },
+    # rand crate gonna rand crate
     { name = "rand_core", version = "=0.3.1" },
 ]
 
