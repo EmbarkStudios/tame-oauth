@@ -2,6 +2,7 @@
 multiple-versions = "deny"
 deny = [
     { name = "openssl" },
+    { name = "openssl-sys" },
 ]
 skip = [
     # reqwest <= 0.19.21 doesn't feature gate cookies, which ends up
