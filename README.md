@@ -1,6 +1,6 @@
 # 🔐 tame-oauth
 
-[![Build Status](https://travis-ci.com/EmbarkStudios/tame-oauth.svg?branch=master)](https://travis-ci.com/EmbarkStudios/tame-oauth)
+[![Build Status](https://github.com/EmbarkStudios/tame-oauth/workflows/CI/badge.svg)](https://github.com/EmbarkStudios/tame-oauth/actions?workflow=CI)
 [![Latest version](https://img.shields.io/crates/v/tame-oauth.svg)](https://crates.io/crates/tame-oauth)
 [![Docs](https://docs.rs/tame-oauth/badge.svg)](https://docs.rs/tame-oauth)
 [![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
