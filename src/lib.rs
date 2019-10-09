@@ -48,11 +48,6 @@
 //! license, shall be dual licensed as above, without any additional terms or
 //! conditions.
 
-#[macro_use(Fail)]
-extern crate failure;
-#[macro_use(Deserialize)]
-extern crate serde;
-
 #[cfg(feature = "gcp")]
 pub mod gcp;
 

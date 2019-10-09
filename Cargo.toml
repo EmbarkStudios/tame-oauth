@@ -22,9 +22,7 @@ path = "src/lib.rs"
 [dependencies]
 base64 = "0.10.1"
 bytes = "0.4.12"
-chrono = "0.4.7"
-failure = "0.1.5"
-http = "0.1.17"
+err-derive = "0.2.0"
 lock_api = "0.3.1"
 parking_lot = "0.9.0"
 # ring is currently set to this verion until more parts of the ecosystem move

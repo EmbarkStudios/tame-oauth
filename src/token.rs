@@ -12,7 +12,7 @@ use chrono::{offset::TimeZone, DateTime, Utc};
 /// absolute terms.
 ///
 /// Utility methods make common queries easier, see `expired()`.
-#[derive(Clone, PartialEq, Debug, Deserialize)]
+#[derive(Clone, PartialEq, Debug, serde::Deserialize)]
 pub struct Token {
     /// used when authenticating calls to oauth2 enabled services.
     pub access_token: String,

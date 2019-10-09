@@ -1,52 +1,29 @@
-#[derive(Fail, Debug)]
+use err_derive::Error as Err;
+
+#[derive(Err, Debug)]
 pub enum Error {
-    #[fail(display = "{}", _0)]
-    Io(#[fail(cause)] std::io::Error),
+    #[error(display = "{}", _0)]
+    Io(#[error(cause)] std::io::Error),
     #[cfg(feature = "jwt")]
-    #[fail(display = "The key format is invalid or unknown")]
+    #[error(display = "The key format is invalid or unknown")]
     InvalidKeyFormat,
-    #[fail(display = "{}", _0)]
-    Base64Decode(#[fail(cause)] base64::DecodeError),
-    #[fail(display = "{}", _0)]
-    Http(#[fail(cause)] http::Error),
-    #[fail(display = "HTTP error status: {}", _0)]
+    #[error(display = "{}", _0)]
+    Base64Decode(#[error(cause)] base64::DecodeError),
+    #[error(display = "{}", _0)]
+    Http(#[error(cause)] http::Error),
+    #[error(display = "HTTP error status: {}", _0)]
     HttpStatus(http::StatusCode),
-    #[fail(display = "{}", _0)]
-    Json(#[fail(cause)] serde_json::Error),
-    #[fail(display = "Auth error {}", _0)]
-    AuthError(#[fail(cause)] AuthError),
+    #[error(display = "{}", _0)]
+    Json(#[error(cause)] serde_json::Error),
+    #[error(display = "Auth error {}", _0)]
+    AuthError(#[error(cause)] AuthError),
     #[cfg(feature = "jwt")]
-    #[fail(display = "RSA key is invalid")]
+    #[error(display = "RSA key is invalid")]
     InvalidRsaKey,
 }
 
-impl From<base64::DecodeError> for Error {
-    fn from(e: base64::DecodeError) -> Self {
-        Error::Base64Decode(e)
-    }
-}
-
-impl From<http::Error> for Error {
-    fn from(e: http::Error) -> Self {
-        Error::Http(e)
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(e: serde_json::Error) -> Self {
-        Error::Json(e)
-    }
-}
-
-// #[cfg(feature = "gcp")]
-// impl From<jsonwebtoken::errors::Error> for Error {
-//     fn from(e: jsonwebtoken::errors::Error) -> Self {
-//         Error::Jwt(e)
-//     }
-// }
-
-#[derive(Deserialize, Debug, Fail)]
-#[fail(display = "Auth error {:?}", error_description)]
+#[derive(serde::Deserialize, Debug, Err)]
+#[error(display = "Auth error {:?}", error_description)]
 pub struct AuthError {
     /// Top level error type
     error: Option<String>,
