@@ -14,7 +14,7 @@ const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
 /// Minimal parts needed from a GCP service acccount key
 /// for token acquisition
-#[derive(Deserialize, Debug, Clone)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
     /// The private key we use to sign
     pub private_key: String,
@@ -278,7 +278,7 @@ impl ServiceAccountAccess {
 }
 
 /// This is the schema of the server's response.
-#[derive(Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 struct TokenResponse {
     /// The actual token
     access_token: String,

@@ -18,7 +18,7 @@ pub(crate) struct Claims {
 
 /// A basic JWT header, the alg defaults to HS256 and typ is automatically
 /// set to `JWT`. All the other fields are optional.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, serde::Deserialize)]
 pub struct Header {
     /// The type of JWS: it can only be "JWT" here
     ///
@@ -79,7 +79,7 @@ impl Default for Header {
 }
 
 /// The algorithms supported for signing/verifying
-#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, serde::Deserialize)]
 pub enum Algorithm {
     /// HMAC using SHA-256
     HS256,
@@ -139,8 +139,9 @@ fn sign_rsa(
     signing_input: &str,
 ) -> Result<String, Error> {
     let key_pair = match key {
-        Key::Pkcs8(bytes) => signature::RsaKeyPair::from_pkcs8(untrusted::Input::from(bytes))
-            .map_err(|_| Error::InvalidRsaKey)?,
+        Key::Pkcs8(bytes) => {
+            signature::RsaKeyPair::from_pkcs8(bytes).map_err(|_| Error::InvalidRsaKey)?
+        }
     };
 
     let key_pair = std::sync::Arc::new(key_pair);
