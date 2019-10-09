@@ -12,7 +12,6 @@ keywords = ["oauth", "tame", "sans-io", "gcp"]
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "EmbarkStudios/tame-oauth", branch = "master" }
 maintenance = { status = "actively-developed" }
 
 [lib]
