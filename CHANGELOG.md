@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2019-12-05
+### Changed
+- Updated several dependencies
+
 ## [0.3.0] - 2019-10-10
 ### Changed
 - Upgraded `ring` to `0.16.9`
@@ -29,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial add of `tame-oauth`
 
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.1.0...0.2.0
