@@ -19,20 +19,20 @@ doctest = false
 path = "src/lib.rs"
 
 [dependencies]
-base64 = "0.10.1"
+base64 = "0.11.0"
 bytes = "0.4.12"
-chrono = "0.4.9"
+chrono = "0.4.10"
 http = "0.1.18"
-lock_api = "0.3.1"
-parking_lot = "0.9.0"
+lock_api = "0.3.2"
+parking_lot = "0.10.0"
 ring = { version = "0.16.9", optional = true }
-serde = { version = "1.0.101", features = [ "derive" ] }
-serde_json = "1.0.41"
+serde = { version = "1.0.103", features = [ "derive" ] }
+serde_json = "1.0.44"
 twox-hash = { version = "1.5.0", default-features = false }
 url = { version = "2.1.0", optional = true }
 
 [dev-dependencies]
-reqwest = { version = "0.9.21", default-features = false, features = [ "rustls-tls" ] }
+reqwest = { version = "0.9.22", default-features = false, features = [ "rustls-tls" ] }
 
 [features]
 default = ["gcp"]
