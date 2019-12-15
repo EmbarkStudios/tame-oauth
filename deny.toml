@@ -6,7 +6,7 @@ deny = [
 ]
 skip-tree = [
     # We don't care about duplicates brought in by reqwest as it is dev only
-    { name = "reqwest", version = "=0.9.22" },
+    { name = "reqwest", version = "=0.9" },
 ]
 
 [licenses]
