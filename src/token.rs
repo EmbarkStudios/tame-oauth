@@ -48,8 +48,7 @@ impl std::convert::TryInto<http::header::HeaderValue> for Token {
 
     fn try_into(self) -> Result<http::header::HeaderValue, crate::Error> {
         let auth_header_val = format!("{} {}", self.token_type, self.access_token);
-        let auth_header_val = bytes::Bytes::from(auth_header_val);
-        http::header::HeaderValue::from_shared(auth_header_val)
+        http::header::HeaderValue::from_str(&auth_header_val)
             .map_err(|e| crate::Error::from(http::Error::from(e)))
     }
 }

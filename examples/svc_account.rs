@@ -38,7 +38,7 @@ fn main() {
             scope_hash,
             ..
         } => {
-            let client = reqwest::Client::new();
+            let client = reqwest::blocking::Client::new();
 
             let (parts, body) = request.into_parts();
             let uri = parts.uri.to_string();
@@ -66,9 +66,7 @@ fn main() {
             response.copy_to(&mut writer).unwrap();
             let buffer = writer.into_inner();
 
-            let mut builder = http::Response::builder();
-
-            builder
+            let mut builder = http::Response::builder()
                 .status(response.status())
                 .version(response.version());
 
