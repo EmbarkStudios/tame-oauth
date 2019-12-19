@@ -14,10 +14,8 @@
 
 ## Why not?
 
-* The only auth flow that is currently implemented is the service account flow for GCP. Other flows
-can be added, but right now that is the only one we need.
-* There are several other oauth crates available that have many more features and are easier
-to work with, if you don't care about what HTTP clients they use.
+* The only auth flow that is currently implemented is the service account flow for GCP. Other flows can be added, but right now that is the only one we need.
+* There are several other oauth crates available that have many more features and are easier to work with, if you don't care about what HTTP clients they use.
 * This crate requires more boilerplate to use.
 
 ## Examples
@@ -26,8 +24,7 @@ to work with, if you don't care about what HTTP clients they use.
 
 Usage: `cargo run --example svc_account -- <key_path> <scope..>`
 
-A small example of using `tame-oauth` together with [reqwest](). Given a key file and 1 or more scopes,
-it will attempt to get a token that could be used to access resources in those scopes.
+A small example of using `tame-oauth` together with [reqwest](). Given a key file and 1 or more scopes, it will attempt to get a token that could be used to access resources in those scopes.
 
 `cargo run --example svc_account -- ~/.secrets/super-sekret.json https://www.googleapis.com/auth/pubsub https://www.googleapis.com/auth/devstorage.read_only`
 
