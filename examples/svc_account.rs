@@ -13,9 +13,6 @@ fn main() {
         .next()
         .expect("expected path to a service account json file");
     let scopes: Vec<_> = args.collect();
-
-    use bytes::BufMut;
-
     let service_key = std::fs::read_to_string(key_path).expect("failed to read json key");
 
     // Deserialize the service account info from the json data
@@ -60,11 +57,9 @@ fn main() {
             let mut response = client.execute(request).unwrap();
 
             // Read the response body into a buffer
-            let mut writer =
-                bytes::BytesMut::with_capacity(response.content_length().unwrap_or(1024) as usize)
-                    .writer();
-            response.copy_to(&mut writer).unwrap();
-            let buffer = writer.into_inner();
+            let mut buffer = Vec::with_capacity(response.content_length().unwrap_or(1024) as usize);
+
+            response.copy_to(&mut buffer).unwrap();
 
             let mut builder = http::Response::builder()
                 .status(response.status())
@@ -81,7 +76,7 @@ fn main() {
                     .map(|(k, v)| (k.clone(), v.clone())),
             );
 
-            let response = builder.body(buffer.freeze()).unwrap();
+            let response = builder.body(buffer).unwrap();
 
             // Tell our accesssor about the response, also passing
             // the scope_hash for the scopes we initially requested,

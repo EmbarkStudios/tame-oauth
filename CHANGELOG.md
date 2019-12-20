@@ -5,7 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- next-header -->
+
 ## [Unreleased] - ReleaseDate
+### Removed
+- Removed `bytes` dependency which was only used by the svc_account example
+
 ## [0.4.0] - 2019-12-20
 ### Changed
 - Upgraded `http` to `0.2.0`
