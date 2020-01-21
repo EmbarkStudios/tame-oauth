@@ -22,16 +22,22 @@ path = "src/lib.rs"
 base64 = "0.11.0"
 chrono = "0.4.10"
 http = "0.2.0"
-lock_api = "0.3.2"
+lock_api = "0.3.3"
 parking_lot = "0.10.0"
 ring = { version = "0.16.9", optional = true }
-serde = { version = "1.0.103", features = [ "derive" ] }
+serde = { version = "1.0.104", features = [ "derive" ] }
 serde_json = "1.0.44"
 twox-hash = { version = "1.5.0", default-features = false }
-url = { version = "2.1.0", optional = true }
+url = { version = "2.1.1", optional = true }
 
-[dev-dependencies]
-reqwest = { git = "https://github.com/seanmonstar/reqwest.git", rev = "18fd9a6", default-features = false, features = [ "rustls-tls", "blocking" ] }
+[dev-dependencies.reqwest]
+version = "0.10.1"
+default-features = false
+features = ["rustls-tls"]
+
+[dev-dependencies.tokio]
+version = "0.2.9"
+features = ["macros"]
 
 [features]
 default = ["gcp"]
