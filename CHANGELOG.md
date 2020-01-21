@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- Updated dependencies
+- Made `svc_account` example async
 
 ## [0.4.1] - 2019-12-20
 ### Removed
