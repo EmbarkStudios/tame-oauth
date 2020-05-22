@@ -8,7 +8,14 @@ targets = [
 [advisories]
 unmaintained = "deny"
 ignore = [
+    # spin is unmaintained, but it has a couple of heavy users,
+    # particularly lazy_static that will probably take a while
+    # to get rid of
     "RUSTSEC-2019-0031",
+
+    # net2 is deprecated in favor of socket2
+    # but hyper, mio, miow crates are still using net2
+    "RUSTSEC-2020-0016",
 ]
 
 [bans]
