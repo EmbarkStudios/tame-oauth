@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.4.3] - 2020-06-04
 ### Changed
 - Updated dependencies
 
@@ -50,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.2...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.3...HEAD
+[0.4.3]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.3.1...0.4.0
