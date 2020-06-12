@@ -3,7 +3,6 @@
 
 //! # 🔐 tame-oauth
 //!
-//! [![Build Status](https://travis-ci.com/EmbarkStudios/tame-oauth.svg?branch=master)](https://travis-ci.com/EmbarkStudios/tame-oauth)
 //! [![Latest version](https://img.shields.io/crates/v/tame-oauth.svg)](https://crates.io/crates/tame-oauth)
 //! [![Docs](https://docs.rs/tame-oauth/badge.svg)](https://docs.rs/tame-oauth)
 //!
