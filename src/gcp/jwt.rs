@@ -151,10 +151,7 @@ fn sign_rsa(
         .sign(alg, &rng, signing_input.as_bytes(), &mut signature)
         .map_err(|_| Error::InvalidRsaKey)?;
 
-    Ok(base64::encode_config::<[u8]>(
-        &signature,
-        base64::URL_SAFE_NO_PAD,
-    ))
+    Ok(base64::encode_config(&signature, base64::URL_SAFE_NO_PAD))
 }
 
 /// Take the payload of a JWT, sign it using the algorithm given and return

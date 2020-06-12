@@ -6,7 +6,8 @@ use tame_oauth::gcp::prelude::*;
 // crate is that you can use whichever one you like as long as you
 // don't mind doing a little bit of boiler to convert between
 // from http::Request and to http::Response
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut args = std::env::args().skip(1);
 
     let key_path = args
@@ -35,7 +36,7 @@ fn main() {
             scope_hash,
             ..
         } => {
-            let client = reqwest::blocking::Client::new();
+            let client = reqwest::Client::new();
 
             let (parts, body) = request.into_parts();
             let uri = parts.uri.to_string();
@@ -54,12 +55,7 @@ fn main() {
             let request = builder.headers(parts.headers).body(body).build().unwrap();
 
             // Send the actual request
-            let mut response = client.execute(request).unwrap();
-
-            // Read the response body into a buffer
-            let mut buffer = Vec::with_capacity(response.content_length().unwrap_or(1024) as usize);
-
-            response.copy_to(&mut buffer).unwrap();
+            let response = client.execute(request).await.unwrap();
 
             let mut builder = http::Response::builder()
                 .status(response.status())
@@ -76,6 +72,7 @@ fn main() {
                     .map(|(k, v)| (k.clone(), v.clone())),
             );
 
+            let buffer = response.bytes().await.unwrap();
             let response = builder.body(buffer).unwrap();
 
             // Tell our accesssor about the response, also passing

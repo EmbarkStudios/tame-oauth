@@ -1,12 +1,34 @@
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "x86_64-unknown-linux-musl" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "x86_64-apple-darwin" },
+]
+
+[advisories]
+unmaintained = "deny"
+ignore = [
+    # spin is unmaintained, but it has a couple of heavy users,
+    # particularly lazy_static that will probably take a while
+    # to get rid of
+    "RUSTSEC-2019-0031",
+
+    # net2 is deprecated in favor of socket2
+    # but hyper, mio, miow crates are still using net2
+    "RUSTSEC-2020-0016",
+]
+
 [bans]
 multiple-versions = "deny"
 deny = [
     { name = "openssl" },
     { name = "openssl-sys" },
 ]
-skip-tree = [
-    # We don't care about duplicates brought in by reqwest as it is dev only
-    { name = "reqwest", version = "0.10.0-alpha" },
+skip = [
+    # rustls uses an older version of base64
+    { name = "base64", version = "=0.11.0" },
+    # mio uses an ancient version of winapi
+    { name = "winapi", version = "=0.2.8" },
 ]
 
 [licenses]
@@ -15,13 +37,13 @@ unlicensed = "deny"
 confidence-threshold = 0.92
 allow = [
     "Apache-2.0",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
     "MIT",
-    "MPL-2.0",
-    "OpenSSL",
-    "Zlib",
+]
+exceptions = [
+    { allow = ["MPL-2.0"], name = "webpki-roots" },
+    { allow = ["ISC"], name = "untrusted" },
+    { allow = ["ISC"], name = "webpki" },
+    { allow = ["ISC", "MIT", "OpenSSL"], name = "ring" },
 ]
 
 [[licenses.clarify]]
