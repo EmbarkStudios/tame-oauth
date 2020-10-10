@@ -70,38 +70,11 @@ pub enum TokenOrRequest {
     },
 }
 
-use lock_api::{GuardSend, RawMutex};
-use std::sync::atomic::{AtomicBool, Ordering};
-
-struct RawSpinlock(AtomicBool);
-
-unsafe impl RawMutex for RawSpinlock {
-    const INIT: RawSpinlock = RawSpinlock(AtomicBool::new(false));
-
-    // A spinlock guard can be sent to another thread and unlocked there
-    type GuardMarker = GuardSend;
-
-    fn lock(&self) {
-        // Note: This isn't the best way of implementing a spinlock
-        while !self.try_lock() {}
-    }
-
-    fn try_lock(&self) -> bool {
-        self.0.swap(true, Ordering::Acquire)
-    }
-
-    unsafe fn unlock(&self) {
-        self.0.store(false, Ordering::Release);
-    }
-}
-
-type Spinlock<T> = lock_api::Mutex<RawSpinlock, T>;
-
 /// A token provider for a GCP service account.
 pub struct ServiceAccountAccess {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
-    cache: Spinlock<Vec<Entry>>,
+    cache: parking_lot::Mutex<Vec<Entry>>,
 }
 
 impl ServiceAccountAccess {
@@ -127,7 +100,7 @@ impl ServiceAccountAccess {
 
         Ok(Self {
             info,
-            cache: Spinlock::new(Vec::new()),
+            cache: parking_lot::Mutex::new(Vec::new()),
             priv_key: key_bytes,
         })
     }
