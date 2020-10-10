@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Fixed
+- [#21](https://github.com/EmbarkStudios/tame-oauth/pull/21) Fixed a rather serious bug [#20](https://github.com/EmbarkStudios/tame-oauth/issues/20) due to a terribly implemented spinlock. Thanks for the report [@fasterthanlime](https://github.com/fasterthanlime)!
+
 ## [0.4.3] - 2020-06-04
 ### Changed
 - Updated dependencies
