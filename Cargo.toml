@@ -19,7 +19,7 @@ doctest = false
 path = "src/lib.rs"
 
 [dependencies]
-base64 = "0.13"
+base64 = "0.12" # Keep aligned with rustls
 chrono = "0.4"
 http = "0.2"
 lock_api = "0.4"
