@@ -105,6 +105,11 @@ impl ServiceAccountAccess {
         })
     }
 
+    /// Gets the [ServiceAccountInfo] this was created for
+    pub fn get_account_info(&self) -> &ServiceAccountInfo {
+        &self.info
+    }
+
     /// Attempts to retrieve a token that can be used in an API request, if we haven't
     /// already retrieved a token for the specified scopes, or the token has expired,
     /// an HTTP request is returned that can be used to retrieve a token.
