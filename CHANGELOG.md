@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.4.5] - 2020-10-30
 ### Added
 - Added `ServiceAccountAccess::get_account_info`.
 
@@ -58,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.4...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.5...HEAD
+[0.4.5]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.4...0.4.5
 [0.4.4]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.1...0.4.2
