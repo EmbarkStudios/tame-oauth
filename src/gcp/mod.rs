@@ -85,7 +85,7 @@ impl ServiceAccountAccess {
             .private_key
             .splitn(5, "-----")
             .nth(2)
-            .ok_or_else(|| Error::InvalidKeyFormat)?;
+            .ok_or(Error::InvalidKeyFormat)?;
 
         // Strip out all of the newlines
         let key_string = key_string.split_whitespace().fold(
