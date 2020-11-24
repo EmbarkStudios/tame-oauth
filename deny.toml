@@ -20,6 +20,10 @@ deny = [
     { name = "openssl-sys" },
 ]
 skip = [
+    # rustls depends on an old version
+    { name = "base64", version = "=0.12.3" },
+    { name = "pin-project-lite", version = "=0.1.11" },
+
     # mio uses an ancient version of winapi
     { name = "winapi", version = "=0.2.8" },
 
