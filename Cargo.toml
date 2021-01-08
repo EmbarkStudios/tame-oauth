@@ -28,16 +28,16 @@ ring = { version = "0.16", optional = true }
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
 twox-hash = { version = "1.5.0", default-features = false }
-url = { version = "2.1", optional = true }
+url = { version = "2.2", optional = true }
 
 [dev-dependencies.reqwest]
-version = "0.10"
+version = "0.11"
 default-features = false
 features = ["rustls-tls"]
 
 [dev-dependencies.tokio]
-version = "0.2"
-features = ["macros"]
+version = "1"
+features = ["macros", "rt-multi-thread"]
 
 [features]
 default = ["gcp"]
