@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- Updated url to 2.2
+
 ## [0.4.5] - 2020-10-30
 ### Added
 - Added `ServiceAccountAccess::get_account_info`.
