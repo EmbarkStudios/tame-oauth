@@ -8,9 +8,6 @@ targets = [
 [advisories]
 unmaintained = "deny"
 ignore = [
-    # net2 is deprecated in favor of socket2
-    # but hyper, mio, miow crates are still using net2
-    "RUSTSEC-2020-0016",
 ]
 
 [bans]
@@ -22,16 +19,12 @@ deny = [
 skip = [
     # rustls depends on an old version
     { name = "base64", version = "=0.12.3" },
-    { name = "pin-project-lite", version = "=0.1.11" },
-
-    # mio uses an ancient version of winapi
-    { name = "winapi", version = "=0.2.8" },
 
     # most crates still reference the pre 1.0 version
     { name = "cfg-if", version = "=0.1.10" },
 ]
 skip-tree = [
-    # hyper uses an outdated version, hopefully fixed in the tokio 0.3 bump
+    # hyper (via h2) uses an outdated version
     { name = "pin-project", version = "=0.4.27" },
 ]
 
