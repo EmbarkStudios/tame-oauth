@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.4.7] - 2021-01-18
 ### Changed
 - Updated `base64` to `0.13`, matching the version used by rustls
 
@@ -66,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.6...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...HEAD
+[0.4.7]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.6...0.4.7
 [0.4.6]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.5...0.4.6
 [0.4.5]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.4...0.4.5
 [0.4.4]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.3...0.4.4
