@@ -114,7 +114,7 @@ impl Default for Algorithm {
     }
 }
 
-/// The supported RSA key formats, see the documentation for ring::signature::RsaKeyPair
+/// The supported RSA key formats, see the documentation for `ring::signature::RsaKeyPair`
 /// for more information
 pub enum Key<'a> {
     /// An unencrypted PKCS#8-encoded key. Can be used with both ECDSA and RSA
@@ -132,7 +132,7 @@ pub fn to_jwt_part<T: Serialize>(input: &T) -> Result<String, Error> {
 }
 
 /// The actual RSA signing + encoding
-/// Taken from Ring doc https://briansmith.org/rustdoc/ring/signature/index.html
+/// Taken from Ring doc <https://briansmith.org/rustdoc/ring/signature/index.html>
 fn sign_rsa(
     alg: &'static dyn signature::RsaEncoding,
     key: Key<'_>,
@@ -140,7 +140,7 @@ fn sign_rsa(
 ) -> Result<String, Error> {
     let key_pair = match key {
         Key::Pkcs8(bytes) => {
-            signature::RsaKeyPair::from_pkcs8(bytes).map_err(|_| Error::InvalidRsaKey)?
+            signature::RsaKeyPair::from_pkcs8(bytes).map_err(Error::InvalidRsaKeyRejected)?
         }
     };
 
@@ -149,7 +149,7 @@ fn sign_rsa(
     let rng = ring::rand::SystemRandom::new();
     key_pair
         .sign(alg, &rng, signing_input.as_bytes(), &mut signature)
-        .map_err(|_| Error::InvalidRsaKey)?;
+        .map_err(Error::InvalidRsaKey)?;
 
     Ok(base64::encode_config(&signature, base64::URL_SAFE_NO_PAD))
 }
@@ -167,7 +167,7 @@ pub fn sign(signing_input: &str, key: Key<'_>, algorithm: Algorithm) -> Result<S
         Algorithm::PS256 => sign_rsa(&signature::RSA_PSS_SHA256, key, signing_input),
         Algorithm::PS384 => sign_rsa(&signature::RSA_PSS_SHA384, key, signing_input),
         Algorithm::PS512 => sign_rsa(&signature::RSA_PSS_SHA512, key, signing_input),
-        _ => unimplemented!(),
+        _ => panic!("Unsupported algorithm {:?}", algorithm),
     }
 }
 

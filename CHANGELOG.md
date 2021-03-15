@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- Changed name of `Error::AuthError` to `Error::Auth`
+
+### Added
+- Added new field to `Error::InvalidRsaKey`
+- Added new Error varient `Error::InvalidRsaKeyRejected` 
 ## [0.4.7] - 2021-01-18
 ### Changed
 - Updated `base64` to `0.13`, matching the version used by rustls
