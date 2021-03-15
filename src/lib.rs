@@ -39,6 +39,7 @@
     clippy::string_to_string,
     clippy::suboptimal_flops,
     clippy::todo,
+    clippy::enum_glob_use,
     clippy::unimplemented,
     clippy::unnested_or_patterns,
     clippy::unused_self,
@@ -49,7 +50,6 @@
 )]
 // END - Embark standard lints v0.3
 // crate-specific exceptions:
-#![allow(clippy::enum_glob_use)]
 
 //! # 🔐 tame-oauth
 //!
