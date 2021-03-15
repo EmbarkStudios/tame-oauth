@@ -1,5 +1,5 @@
-use ring::error::Unspecified;
 use ring::error::KeyRejected;
+use ring::error::Unspecified;
 use std::{error::Error as Err, fmt};
 
 #[derive(Debug)]
@@ -15,12 +15,15 @@ pub enum Error {
     #[cfg(feature = "jwt")]
     InvalidRsaKey(Unspecified),
     #[cfg(feature = "jwt")]
-    InvalidRsaKeyRejected(KeyRejected)
+    InvalidRsaKeyRejected(KeyRejected),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Error::{Auth, Base64Decode, Http, HttpStatus, InvalidKeyFormat, InvalidRsaKey, Io, Json, InvalidRsaKeyRejected};
+        use Error::{
+            Auth, Base64Decode, Http, HttpStatus, InvalidKeyFormat, InvalidRsaKey,
+            InvalidRsaKeyRejected, Io, Json,
+        };
 
         match self {
             Io(err) => write!(f, "{}", err),
