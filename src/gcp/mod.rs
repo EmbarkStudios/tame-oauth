@@ -105,7 +105,7 @@ impl ServiceAccountAccess {
         })
     }
 
-    /// Gets the `[ServiceAccountInfo]` this was created for
+    /// Gets the [`ServiceAccountInfo`] this was created for
     pub fn get_account_info(&self) -> &ServiceAccountInfo {
         &self.info
     }

@@ -1,3 +1,6 @@
+// BEGIN - Embark standard lints v0.3
+// do not change or add/remove here, but one can add exceptions after this section
+// for more info see: <https://github.com/EmbarkStudios/rust-ecosystem/issues/59>
 #![warn(
     clippy::all,
     clippy::await_holding_lock,
@@ -5,7 +8,6 @@
     clippy::debug_assert_with_mut_call,
     clippy::doc_markdown,
     clippy::empty_enum,
-    clippy::enum_glob_use,
     clippy::exit,
     clippy::explicit_into_iter_loop,
     clippy::filter_map_next,
@@ -45,7 +47,9 @@
     nonstandard_style,
     rust_2018_idioms
 )]
-#![warn(rust_2018_idioms)]
+// END - Embark standard lints v0.3
+// crate-specific exceptions:
+#![allow(clippy::enum_glob_use)]
 
 //! # 🔐 tame-oauth
 //!
