@@ -9,13 +9,16 @@ pub enum Error {
     Http(http::Error),
     HttpStatus(http::StatusCode),
     Json(serde_json::Error),
-    AuthError(AuthError),
+    Auth(AuthError),
     #[cfg(feature = "jwt")]
-    InvalidRsaKey,
+    InvalidRsaKey(ring::error::Unspecified),
+    #[cfg(feature = "jwt")]
+    InvalidRsaKeyRejected(ring::error::KeyRejected),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #![allow(clippy::enum_glob_use)]
         use Error::*;
 
         match self {
@@ -26,36 +29,38 @@ impl fmt::Display for Error {
             Http(err) => write!(f, "{}", err),
             HttpStatus(sc) => write!(f, "HTTP error status: {}", sc),
             Json(err) => write!(f, "{}", err),
-            AuthError(err) => write!(f, "{}", err),
+            Auth(err) => write!(f, "{}", err),
             #[cfg(feature = "jwt")]
-            InvalidRsaKey => f.write_str("RSA key is invalid"),
+            InvalidRsaKey(_err) => f.write_str("RSA key is invalid"),
+            #[cfg(feature = "jwt")]
+            InvalidRsaKeyRejected(err) => write!(f, "RSA key is invalid: {}", err),
         }
     }
 }
 
 impl std::error::Error for Error {
     fn cause(&self) -> Option<&dyn Err> {
-        use Error::*;
+        use Error::{Auth, Base64Decode, Http, Io, Json};
 
         match self {
             Io(err) => Some(err as &dyn Err),
             Base64Decode(err) => Some(err as &dyn Err),
             Http(err) => Some(err as &dyn Err),
             Json(err) => Some(err as &dyn Err),
-            AuthError(err) => Some(err as &dyn Err),
+            Auth(err) => Some(err as &dyn Err),
             _ => None,
         }
     }
 
     fn source(&self) -> Option<&(dyn Err + 'static)> {
-        use Error::*;
+        use Error::{Auth, Base64Decode, Http, Io, Json};
 
         match self {
             Io(err) => Some(err as &dyn Err),
             Base64Decode(err) => Some(err as &dyn Err),
             Http(err) => Some(err as &dyn Err),
             Json(err) => Some(err as &dyn Err),
-            AuthError(err) => Some(err as &dyn Err),
+            Auth(err) => Some(err as &dyn Err),
             _ => None,
         }
     }

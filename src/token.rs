@@ -1,6 +1,6 @@
 use chrono::{offset::TimeZone, DateTime, Utc};
 
-/// Represents a token as returned by OAuth2 servers.
+/// Represents a token as returned by `OAuth2` servers.
 ///
 /// It is produced by all authentication flows.
 /// It authenticates certain operations, and must be refreshed once
@@ -34,7 +34,7 @@ impl Token {
         self.access_token.is_empty() || self.expiry_date() <= Utc::now()
     }
 
-    /// Returns a DateTime object representing our expiry date.
+    /// Returns a [`chrono::DateTime`] object representing our expiry date.
     pub fn expiry_date(&self) -> DateTime<Utc> {
         match self.expires_in_timestamp {
             Some(ts) => Utc.timestamp(ts, 0),

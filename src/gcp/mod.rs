@@ -105,7 +105,7 @@ impl ServiceAccountAccess {
         })
     }
 
-    /// Gets the [ServiceAccountInfo] this was created for
+    /// Gets the [`ServiceAccountInfo`] this was created for
     pub fn get_account_info(&self) -> &ServiceAccountInfo {
         &self.info
     }
@@ -205,7 +205,7 @@ impl ServiceAccountAccess {
                 == Some("application/json; charset=utf-8")
             {
                 if let Ok(auth_error) = serde_json::from_slice::<error::AuthError>(body_bytes) {
-                    return Err(Error::AuthError(auth_error));
+                    return Err(Error::Auth(auth_error));
                 }
             }
 
