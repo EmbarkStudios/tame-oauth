@@ -80,6 +80,7 @@ impl Default for Header {
 
 /// The algorithms supported for signing/verifying
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, serde::Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Algorithm {
     /// HMAC using SHA-256
     HS256,
