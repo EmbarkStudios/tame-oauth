@@ -266,15 +266,15 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-impl Into<Token> for TokenResponse {
-    fn into(self) -> Token {
-        let expires_ts = chrono::Utc::now().timestamp() + self.expires_in;
+impl From<TokenResponse> for Token {
+    fn from(tr: TokenResponse) -> Self {
+        let expires_ts = chrono::Utc::now().timestamp() + tr.expires_in;
 
-        Token {
-            access_token: self.access_token,
-            token_type: self.token_type,
+        Self {
+            access_token: tr.access_token,
+            token_type: tr.token_type,
             refresh_token: String::new(),
-            expires_in: Some(self.expires_in),
+            expires_in: Some(tr.expires_in),
             expires_in_timestamp: Some(expires_ts),
         }
     }
