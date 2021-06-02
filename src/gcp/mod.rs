@@ -79,7 +79,7 @@ pub struct ServiceAccountAccess {
 
 impl ServiceAccountAccess {
     /// Creates a new `ServiceAccountAccess` given the provided service
-    /// account info. This can fail if the private key is encoded correctly.
+    /// account info. This can fail if the private key is encoded incorrectly.
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
         let key_string = info
             .private_key
