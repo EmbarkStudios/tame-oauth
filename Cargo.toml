@@ -18,12 +18,24 @@ maintenance = { status = "actively-developed" }
 doctest = false
 path = "src/lib.rs"
 
+[features]
+# This library was first created to support GCP oauth, if we add support for
+# other oauth providers this will most likely change to not have any default features
+default = ["gcp"]
+# Supports for GCP oauth2
+gcp = ["jwt", "url"]
+# Support for Json Web Tokens, ring is used for signing
+jwt = ["ring"]
+# This enables features in chrono and ring that are necessary to use this library
+# in a wasm32 web (browser) context. If you are using wasm outside the browser
+# you will need to target wasm32-wasi for the requisite functionality (time and random)
+wasm-web = ["chrono/wasmbind", "ring/wasm32_c"]
+
 [dependencies]
 base64 = "0.13" # Keep aligned with rustls
 chrono = "0.4"
 http = "0.2"
 lock_api = "0.4"
-parking_lot = "0.11"
 ring = { version = "0.16", optional = true }
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
@@ -38,8 +50,3 @@ features = ["rustls-tls"]
 [dev-dependencies.tokio]
 version = "1.0"
 features = ["macros", "rt-multi-thread"]
-
-[features]
-default = ["gcp"]
-gcp = ["jwt", "url"]
-jwt = ["ring"]

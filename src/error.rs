@@ -14,6 +14,7 @@ pub enum Error {
     InvalidRsaKey(ring::error::Unspecified),
     #[cfg(feature = "jwt")]
     InvalidRsaKeyRejected(ring::error::KeyRejected),
+    Poisoned,
 }
 
 impl fmt::Display for Error {
@@ -34,6 +35,7 @@ impl fmt::Display for Error {
             InvalidRsaKey(_err) => f.write_str("RSA key is invalid"),
             #[cfg(feature = "jwt")]
             InvalidRsaKeyRejected(err) => write!(f, "RSA key is invalid: {}", err),
+            Poisoned => f.write_str("A mutex is poisoned"),
         }
     }
 }

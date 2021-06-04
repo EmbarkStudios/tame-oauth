@@ -74,7 +74,7 @@ pub enum TokenOrRequest {
 pub struct ServiceAccountAccess {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
-    cache: parking_lot::Mutex<Vec<Entry>>,
+    cache: std::sync::Mutex<Vec<Entry>>,
 }
 
 impl ServiceAccountAccess {
@@ -100,7 +100,7 @@ impl ServiceAccountAccess {
 
         Ok(Self {
             info,
-            cache: parking_lot::Mutex::new(Vec::new()),
+            cache: std::sync::Mutex::new(Vec::new()),
             priv_key: key_bytes,
         })
     }
@@ -124,7 +124,7 @@ impl ServiceAccountAccess {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
         let reason = {
-            let cache = self.cache.lock();
+            let cache = self.cache.lock().map_err(|_| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => {
                     let token = &cache[i].token;
@@ -217,7 +217,7 @@ impl ServiceAccountAccess {
 
         // Last token wins, which...should?...be fine
         {
-            let mut cache = self.cache.lock();
+            let mut cache = self.cache.lock().map_err(|_| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => cache[i].token = token.clone(),
                 Err(i) => {
