@@ -124,7 +124,7 @@ impl ServiceAccountAccess {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
         let reason = {
-            let cache = self.cache.lock().map_err(|_| Error::Poisoned)?;
+            let cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => {
                     let token = &cache[i].token;
@@ -217,7 +217,7 @@ impl ServiceAccountAccess {
 
         // Last token wins, which...should?...be fine
         {
-            let mut cache = self.cache.lock().map_err(|_| Error::Poisoned)?;
+            let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => cache[i].token = token.clone(),
                 Err(i) => {
