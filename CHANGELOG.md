@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.5.0] - 2021-06-05
 ### Added
 - Added new field to `Error::InvalidRsaKey`
 - Added `Error::InvalidRsaKeyRejected` variant
@@ -79,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...0.5.0
 [0.4.7]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.6...0.4.7
 [0.4.6]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.5...0.4.6
 [0.4.5]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.4...0.4.5
