@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Removed
+- Removed unused depdendency on `lock_api`, which was lingering after [PR#21](https://github.com/EmbarkStudios/tame-oauth/pull/21).
+
 ## [0.5.0] - 2021-06-05
 ### Added
 - Added new field to `Error::InvalidRsaKey`
