@@ -2,18 +2,28 @@ use std::{error::Error as Err, fmt};
 
 #[derive(Debug)]
 pub enum Error {
-    Io(std::io::Error),
+    /// The private_key field in the [Service Account Key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys)
+    /// is invalid and cannot be parsed
     #[cfg(feature = "jwt")]
     InvalidKeyFormat,
+    /// Unable to deserialize the base64 encoded RSA key
     Base64Decode(base64::DecodeError),
+    /// An error occurred trying to create an HTTP request
     Http(http::Error),
+    /// Failed to authenticate and retrieve an oauth token, and were unable to
+    /// deserialize a more exact reason from the error response
     HttpStatus(http::StatusCode),
+    /// Failed to de/serialize JSON
     Json(serde_json::Error),
+    /// Failed to authenticate and retrieve an oauth token
     Auth(AuthError),
+    /// The RSA key seems valid, but is unable to sign a payload
     #[cfg(feature = "jwt")]
     InvalidRsaKey(ring::error::Unspecified),
+    /// The RSA key is invalid and cannot be used to sign
     #[cfg(feature = "jwt")]
     InvalidRsaKeyRejected(ring::error::KeyRejected),
+    /// A mutex has been poisoned due to a panic while a lock was held
     Poisoned,
 }
 
@@ -23,7 +33,6 @@ impl fmt::Display for Error {
         use Error::*;
 
         match self {
-            Io(err) => write!(f, "{}", err),
             #[cfg(feature = "jwt")]
             InvalidKeyFormat => f.write_str("The key format is invalid or unknown"),
             Base64Decode(err) => write!(f, "{}", err),
@@ -42,10 +51,9 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn cause(&self) -> Option<&dyn Err> {
-        use Error::{Auth, Base64Decode, Http, Io, Json};
+        use Error::{Auth, Base64Decode, Http, Json};
 
         match self {
-            Io(err) => Some(err as &dyn Err),
             Base64Decode(err) => Some(err as &dyn Err),
             Http(err) => Some(err as &dyn Err),
             Json(err) => Some(err as &dyn Err),
@@ -55,10 +63,9 @@ impl std::error::Error for Error {
     }
 
     fn source(&self) -> Option<&(dyn Err + 'static)> {
-        use Error::{Auth, Base64Decode, Http, Io, Json};
+        use Error::{Auth, Base64Decode, Http, Json};
 
         match self {
-            Io(err) => Some(err as &dyn Err),
             Base64Decode(err) => Some(err as &dyn Err),
             Http(err) => Some(err as &dyn Err),
             Json(err) => Some(err as &dyn Err),

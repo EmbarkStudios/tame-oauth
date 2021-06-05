@@ -12,8 +12,7 @@ pub mod prelude {
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-/// Minimal parts needed from a GCP service acccount key
-/// for token acquisition
+/// Minimal parts needed from a GCP service acccount key for token acquisition
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
     /// The private key we use to sign
@@ -25,9 +24,8 @@ pub struct ServiceAccountInfo {
 }
 
 impl ServiceAccountInfo {
-    /// Deserializes service account from a byte slice. This data
-    /// is typically acquired by reading a service account JSON file
-    /// from disk
+    /// Deserializes service account from a byte slice. This data is typically
+    /// acquired by reading a service account JSON file from disk
     pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
     where
         T: AsRef<[u8]>,
