@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.5.1] - 2021-06-05
 ### Removed
 - Removed unused depdendency on `lock_api`, which was lingering after [PR#21](https://github.com/EmbarkStudios/tame-oauth/pull/21).
 
@@ -83,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...0.5.0
 [0.4.7]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.6...0.4.7
 [0.4.6]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.5...0.4.6
