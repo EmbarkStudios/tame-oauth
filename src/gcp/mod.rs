@@ -12,8 +12,7 @@ pub mod prelude {
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-/// Minimal parts needed from a GCP service acccount key
-/// for token acquisition
+/// Minimal parts needed from a GCP service acccount key for token acquisition
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
     /// The private key we use to sign
@@ -25,9 +24,8 @@ pub struct ServiceAccountInfo {
 }
 
 impl ServiceAccountInfo {
-    /// Deserializes service account from a byte slice. This data
-    /// is typically acquired by reading a service account JSON file
-    /// from disk
+    /// Deserializes service account from a byte slice. This data is typically
+    /// acquired by reading a service account JSON file from disk
     pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
     where
         T: AsRef<[u8]>,
@@ -74,7 +72,7 @@ pub enum TokenOrRequest {
 pub struct ServiceAccountAccess {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
-    cache: parking_lot::Mutex<Vec<Entry>>,
+    cache: std::sync::Mutex<Vec<Entry>>,
 }
 
 impl ServiceAccountAccess {
@@ -100,7 +98,7 @@ impl ServiceAccountAccess {
 
         Ok(Self {
             info,
-            cache: parking_lot::Mutex::new(Vec::new()),
+            cache: std::sync::Mutex::new(Vec::new()),
             priv_key: key_bytes,
         })
     }
@@ -124,7 +122,7 @@ impl ServiceAccountAccess {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
         let reason = {
-            let cache = self.cache.lock();
+            let cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => {
                     let token = &cache[i].token;
@@ -217,7 +215,7 @@ impl ServiceAccountAccess {
 
         // Last token wins, which...should?...be fine
         {
-            let mut cache = self.cache.lock();
+            let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => cache[i].token = token.clone(),
                 Err(i) => {

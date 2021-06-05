@@ -19,13 +19,20 @@
 * There are several other oauth crates available that have many more features and are easier to work with, if you don't care about what HTTP clients they use.
 * This crate requires more boilerplate to use.
 
+## Features
+
+* `gcp` (default) - Support for [GCP oauth2](https://developers.google.com/identity/protocols/oauth2)
+* `wasm-web` - Enables wasm features in `chrono` and `ring` needed for `tame-oauth` to be used in a wasm browser context. Note this feature should not be used when targetting wasm outside the browser context, in which case you would likely need to target `wasm32-wasi`.
+* `jwt` (default) - Support for [JSON Web Tokens](https://jwt.io/), required for `gcp`
+* `url` (default) - Url parsing, required for `gcp`
+
 ## Examples
 
 ### [svc_account](examples/svc_account.rs)
 
 Usage: `cargo run --example svc_account -- <key_path> <scope..>`
 
-A small example of using `tame-oauth` together with [reqwest](). Given a key file and 1 or more scopes, it will attempt to get a token that could be used to access resources in those scopes.
+A small example of using `tame-oauth` together with [reqwest](https://github.com/seanmonstar/reqwest). Given a key file and 1 or more scopes, it will attempt to get a token that could be used to access resources in those scopes.
 
 `cargo run --example svc_account -- ~/.secrets/super-sekret.json https://www.googleapis.com/auth/pubsub https://www.googleapis.com/auth/devstorage.read_only`
 

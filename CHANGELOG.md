@@ -6,12 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
-### Changed
-- Changed name of `Error::AuthError` to `Error::Auth`
-
 ### Added
 - Added new field to `Error::InvalidRsaKey`
-- Added new Error varient `Error::InvalidRsaKeyRejected` 
+- Added `Error::InvalidRsaKeyRejected` variant
+- [PR#37](https://github.com/EmbarkStudios/tame-oauth/pull/37) Added new feature `wasm-web`, which enables additional features in `chrono` and `ring` to allow `tame-oauth` to be used in a wasm browser context, as part of a fix for [#36](https://github.com/EmbarkStudios/tame-oauth/issues/36).
+
+### Changed
+- Changed name of `Error::AuthError` to `Error::Auth`
+- [PR#37](https://github.com/EmbarkStudios/tame-oauth/pull/37) replaced the usage of `parking_lot::Mutex` with just regular `std::sync::Mutex` as part of the fix for [#36](https://github.com/EmbarkStudios/tame-oauth/issues/36), this includes adding `Error::Poisoned`.
+
+### Removed
+- Removed `Error:Io` as it was never actually used.
 
 ## [0.4.7] - 2021-01-18
 ### Changed
