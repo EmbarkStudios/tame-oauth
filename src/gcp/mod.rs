@@ -119,18 +119,20 @@ impl ServiceAccountAccess {
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
     {
-        self.get_token_with(None, scopes)
+        self.get_token_with::<S, I, String>(None, scopes)
     }
 
-    /// Like [`get_token`], but allows the JWT "subject" to be passed in.
-    pub fn get_token_with<'a, S, I>(
+    /// Like [`ServiceAccountAccess::get_token`], but allows the JWT "subject"
+    /// to be passed in.
+    pub fn get_token_with<'a, S, I, T>(
         &self,
-        subject: Option<String>,
+        subject: Option<T>,
         scopes: I,
     ) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
+        T: Into<String>,
     {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
@@ -159,7 +161,7 @@ impl ServiceAccountAccess {
             audience: self.info.token_uri.clone(),
             expiration: expiry,
             issued_at: issued,
-            subject,
+            subject: subject.map(|s| s.into()),
         };
 
         let assertion = jwt::encode(
