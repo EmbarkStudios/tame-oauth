@@ -12,7 +12,8 @@ pub(crate) struct Claims {
     pub(crate) expiration: i64,
     #[serde(rename = "iat")]
     pub(crate) issued_at: i64,
-    pub(crate) sub: Option<String>,
+    #[serde(rename = "sub")]
+    pub(crate) subject: Option<String>,
     pub(crate) scope: String,
 }
 

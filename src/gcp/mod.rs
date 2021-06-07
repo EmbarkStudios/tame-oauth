@@ -119,6 +119,19 @@ impl ServiceAccountAccess {
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
     {
+        self.get_token_with(None, scopes)
+    }
+
+    /// Like [`get_token`], but allows the JWT "subject" to be passed in.
+    pub fn get_token_with<'a, S, I>(
+        &self,
+        subject: Option<String>,
+        scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+    {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
         let reason = {
@@ -146,7 +159,7 @@ impl ServiceAccountAccess {
             audience: self.info.token_uri.clone(),
             expiration: expiry,
             issued_at: issued,
-            sub: None,
+            subject,
         };
 
         let assertion = jwt::encode(
