@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.5.2] - 2021-06-18
 ### Added
 - [PR#38](https://github.com/EmbarkStudios/tame-oauth/pull/38) added `ServiceAccountAccess::get_token_with_subject` to allow control over the JWT `subject` field. Thanks [@fosskers](https://github.com/fosskers)!
 
@@ -87,7 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.1...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.2...HEAD
+[0.5.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...0.5.0
 [0.4.7]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.6...0.4.7
