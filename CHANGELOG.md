@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 ### Added
-
-- `ServiceAccountAccess::get_token_with` for control over the JWT subject field.
+- [PR#38](https://github.com/EmbarkStudios/tame-oauth/pull/38) added `ServiceAccountAccess::get_token_with_subject` to allow control over the JWT `subject` field. Thanks [@fosskers](https://github.com/fosskers)!
 
 ## [0.5.1] - 2021-06-05
 ### Removed
