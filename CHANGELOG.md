@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Added
+
+- `ServiceAccountAccess::get_token_with` for control over the JWT subject field.
+
 ## [0.5.1] - 2021-06-05
 ### Removed
 - Removed unused depdendency on `lock_api`, which was lingering after [PR#21](https://github.com/EmbarkStudios/tame-oauth/pull/21).

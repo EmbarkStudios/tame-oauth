@@ -114,10 +114,26 @@ impl ServiceAccountAccess {
     ///
     /// Note that the scopes are not sorted or in any other way manipulated, so any
     /// modifications to them will require a new token to be requested.
+    #[inline]
     pub fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
+    {
+        self.get_token_with_subject::<S, I, String>(None, scopes)
+    }
+
+    /// Like [`ServiceAccountAccess::get_token`], but allows the JWT "subject"
+    /// to be passed in.
+    pub fn get_token_with_subject<'a, S, I, T>(
+        &self,
+        subject: Option<T>,
+        scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+        T: Into<String>,
     {
         let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
 
@@ -146,7 +162,7 @@ impl ServiceAccountAccess {
             audience: self.info.token_uri.clone(),
             expiration: expiry,
             issued_at: issued,
-            sub: None,
+            subject: subject.map(|s| s.into()),
         };
 
         let assertion = jwt::encode(
