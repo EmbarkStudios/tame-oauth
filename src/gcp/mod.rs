@@ -1,6 +1,6 @@
 use crate::{
     error::{self, Error},
-    token::{RequestReason, Token, TokenOrRequest},
+    token::{RequestReason, Token, TokenOrRequest, TokenProvider},
 };
 
 mod jwt;
@@ -8,7 +8,7 @@ use jwt::{Algorithm, Header, Key};
 
 pub mod prelude {
     pub use super::{ServiceAccountAccess, ServiceAccountInfo};
-    pub use crate::token::{Token, TokenOrRequest};
+    pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 }
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -83,24 +83,41 @@ impl ServiceAccountAccess {
         &self.info
     }
 
-    /// Attempts to retrieve a token that can be used in an API request, if we haven't
-    /// already retrieved a token for the specified scopes, or the token has expired,
-    /// an HTTP request is returned that can be used to retrieve a token.
-    ///
-    /// Note that the scopes are not sorted or in any other way manipulated, so any
-    /// modifications to them will require a new token to be requested.
-    #[inline]
-    pub fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
+    /// Hashes a set of scopes to a numeric key we can use to have an in-memory
+    /// cache of scopes -> token
+    fn serialize_scopes<'a, I, S>(scopes: I) -> (u64, String)
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: Iterator<Item = &'a S>,
     {
-        self.get_token_with_subject::<S, I, String>(None, scopes)
-    }
+        use std::hash::Hasher;
 
+        let scopes = scopes.map(|s| s.as_ref()).collect::<Vec<&str>>().join(" ");
+        let hash = {
+            let mut hasher = twox_hash::XxHash::default();
+            hasher.write(scopes.as_bytes());
+            hasher.finish()
+        };
+
+        (hash, scopes)
+    }
+}
+
+/// This is the schema of the server's response.
+#[derive(serde::Deserialize, Debug)]
+struct TokenResponse {
+    /// The actual token
+    access_token: String,
+    /// The token type, pretty much always Header
+    token_type: String,
+    /// The time until the token expires and a new one needs to be requested
+    expires_in: i64,
+}
+
+impl TokenProvider for ServiceAccountAccess {
     /// Like [`ServiceAccountAccess::get_token`], but allows the JWT "subject"
     /// to be passed in.
-    pub fn get_token_with_subject<'a, S, I, T>(
+    fn get_token_with_subject<'a, S, I, T>(
         &self,
         subject: Option<T>,
         scopes: I,
@@ -170,11 +187,11 @@ impl ServiceAccountAccess {
         })
     }
 
-    /// Once a response has been received for a token request, call this
-    /// method to deserialize the token and store it in the cache so that
-    /// future API requests don't have to retrieve a new token, until it
-    /// expires.
-    pub fn parse_token_response<S>(
+    /// Handle responses from the token URI request we generated in
+    /// `get_token`. This method deserializes the response and stores
+    /// the token in a local cache, so that future lookups for the
+    /// same scopes don't require new http requests.
+    fn parse_token_response<S>(
         &self,
         hash: u64,
         response: http::Response<S>,
@@ -223,36 +240,6 @@ impl ServiceAccountAccess {
 
         Ok(token)
     }
-
-    /// Hashes a set of scopes to a numeric key we can use to have an in-memory
-    /// cache of scopes -> token
-    fn serialize_scopes<'a, I, S>(scopes: I) -> (u64, String)
-    where
-        S: AsRef<str> + 'a,
-        I: Iterator<Item = &'a S>,
-    {
-        use std::hash::Hasher;
-
-        let scopes = scopes.map(|s| s.as_ref()).collect::<Vec<&str>>().join(" ");
-        let hash = {
-            let mut hasher = twox_hash::XxHash::default();
-            hasher.write(scopes.as_bytes());
-            hasher.finish()
-        };
-
-        (hash, scopes)
-    }
-}
-
-/// This is the schema of the server's response.
-#[derive(serde::Deserialize, Debug)]
-struct TokenResponse {
-    /// The actual token
-    access_token: String,
-    /// The token type, pretty much always Header
-    token_type: String,
-    /// The time until the token expires and a new one needs to be requested
-    expires_in: i64,
 }
 
 impl From<TokenResponse> for Token {
