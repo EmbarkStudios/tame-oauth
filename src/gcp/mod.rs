@@ -1,13 +1,14 @@
 use crate::{
     error::{self, Error},
-    token::Token,
+    token::{RequestReason, Token, TokenOrRequest},
 };
 
 mod jwt;
 use jwt::{Algorithm, Header, Key};
 
 pub mod prelude {
-    pub use super::{RequestReason, ServiceAccountAccess, ServiceAccountInfo, TokenOrRequest};
+    pub use super::{ServiceAccountAccess, ServiceAccountInfo};
+    pub use crate::token::{Token, TokenOrRequest};
 }
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -40,32 +41,6 @@ impl ServiceAccountInfo {
 struct Entry {
     hash: u64,
     token: Token,
-}
-
-#[derive(Debug)]
-pub enum RequestReason {
-    /// An existing token has expired
-    Expired,
-    /// The requested scopes have never been seen before
-    ScopesChanged,
-}
-
-/// Either a valid token, or an HTTP request that
-/// can be used to acquire one
-#[derive(Debug)]
-pub enum TokenOrRequest {
-    /// A valid token that can be supplied in an API request
-    Token(Token),
-    Request {
-        /// The parts of an HTTP request that must be sent
-        /// to acquire the token, in the client of your choice
-        request: http::Request<Vec<u8>>,
-        /// The reason we need to retrieve a new token
-        reason: RequestReason,
-        /// An opaque hash of the scope(s) for which the request
-        /// was constructed
-        scope_hash: u64,
-    },
 }
 
 /// A token provider for a GCP service account.
