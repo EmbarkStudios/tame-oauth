@@ -96,9 +96,9 @@ impl From<serde_json::Error> for Error {
 #[derive(serde::Deserialize, Debug)]
 pub struct AuthError {
     /// Top level error type
-    error: Option<String>,
+    pub error: Option<String>,
     /// More specific details on the error
-    error_description: Option<String>,
+    pub error_description: Option<String>,
 }
 
 impl fmt::Display for AuthError {

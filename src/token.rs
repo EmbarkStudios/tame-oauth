@@ -1,3 +1,4 @@
+use crate::error::Error;
 use chrono::{offset::TimeZone, DateTime, Utc};
 
 /// Represents a token as returned by `OAuth2` servers.
@@ -41,6 +42,75 @@ impl Token {
             None => Utc::now(),
         }
     }
+}
+
+#[derive(Debug)]
+pub enum RequestReason {
+    /// An existing token has expired
+    Expired,
+    /// The requested scopes have never been seen before
+    ScopesChanged,
+}
+
+/// Either a valid token, or an HTTP request that
+/// can be used to acquire one
+#[derive(Debug)]
+pub enum TokenOrRequest {
+    /// A valid token that can be supplied in an API request
+    Token(Token),
+    Request {
+        /// The parts of an HTTP request that must be sent
+        /// to acquire the token, in the client of your choice
+        request: http::Request<Vec<u8>>,
+        /// The reason we need to retrieve a new token
+        reason: RequestReason,
+        /// An opaque hash of the scope(s) for which the request
+        /// was constructed
+        scope_hash: u64,
+    },
+}
+
+/// A `TokenProvider` has a single method to implement
+/// `get_token_with_subject`. Implementations are free to perform
+/// caching or always return a `Request` in the `TokenOrRequest`.
+pub trait TokenProvider {
+    /// Attempts to retrieve a token that can be used in an API request, if we haven't
+    /// already retrieved a token for the specified scopes, or the token has expired,
+    /// an HTTP request is returned that can be used to retrieve a token.
+    ///
+    /// Note that the scopes are not sorted or in any other way manipulated, so any
+    /// modifications to them will require a new token to be requested.
+    #[inline]
+    fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+    {
+        self.get_token_with_subject::<S, I, String>(None, scopes)
+    }
+
+    /// Like [`TokenProvider::get_token`], but allows the JWT "subject"
+    /// to be passed in.
+    fn get_token_with_subject<'a, S, I, T>(
+        &self,
+        subject: Option<T>,
+        scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+        T: Into<String>;
+
+    /// Once a response has been received for a token request, call
+    /// this method to deserialize the token (and potentially store it
+    /// in a local cache for reuse until it expires).
+    fn parse_token_response<S>(
+        &self,
+        hash: u64,
+        response: http::Response<S>,
+    ) -> Result<Token, Error>
+    where
+        S: AsRef<[u8]>;
 }
 
 impl std::convert::TryInto<http::header::HeaderValue> for Token {
