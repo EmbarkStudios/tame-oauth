@@ -7,7 +7,10 @@ mod jwt;
 use jwt::{Algorithm, Header, Key};
 
 pub mod prelude {
-    pub use super::{MetadataServerProvider, ServiceAccountAccess, ServiceAccountInfo};
+    pub use super::{
+        get_default_google_credentials, EndUserCredentials, MetadataServerProvider,
+        ServiceAccountAccess, ServiceAccountInfo, TokenProviderWrapper,
+    };
     pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 }
 
@@ -344,6 +347,269 @@ impl TokenProvider for MetadataServerProvider {
     }
 }
 
+/// The fields from a well formed `application_default_credentials.json`.
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct EndUserCredentials {
+    /// The OAuth2 client_id
+    pub client_id: String,
+    /// The OAuth2 client_secret
+    pub client_secret: String,
+    /// The OAuth2 refresh_token
+    pub refresh_token: String,
+    /// The client type (the value must be authorized_user)
+    #[serde(rename = "type")]
+    pub client_type: String,
+}
+
+impl EndUserCredentials {
+    /// Deserializes the `EndUserCredentials` from a byte slice. This
+    /// data is typically acquired by reading an
+    /// `application_default_credentials.json` file from disk.
+    pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
+    where
+        T: AsRef<[u8]>,
+    {
+        let slice = key_data.as_ref();
+
+        let account_info: Self = serde_json::from_slice(slice)?;
+        Ok(account_info)
+    }
+}
+
+impl TokenProvider for EndUserCredentials {
+    fn get_token_with_subject<'a, S, I, T>(
+        &self,
+        subject: Option<T>,
+        // EndUserCredentials only have the scopes they were granted
+        // via their authorization. So whatever scopes you're asking
+        // for, better have been handled when authorized. `gcloud auth
+        // application-default login` will get the
+        // https://www.googleapis.com/auth/cloud-platform which
+        // includes all *GCP* APIs.
+        _scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+        T: Into<String>,
+    {
+        // We can only support subject being none
+        if subject.is_some() {
+            return Err(Error::Auth(AuthError {
+                error: Some("Unsupported".to_string()),
+                error_description: Some(
+                    "ADC / User tokens do not support jwt subjects".to_string(),
+                ),
+            }));
+        }
+
+        // To get an access token, we need to perform a refresh
+        // following the instructions at
+        // https://developers.google.com/identity/protocols/oauth2/web-server#offline
+        // (i.e., POST our client data as a refresh_token request to
+        // the /token endpoint).
+        let url = "https://oauth2.googleapis.com/token";
+
+        // Build up the parameters as a form encoded string.
+        let body = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("client_id", &self.client_id)
+            .append_pair("client_secret", &self.client_secret)
+            .append_pair("grant_type", "refresh_token")
+            .append_pair("refresh_token", &self.refresh_token)
+            .finish();
+
+        let body = Vec::from(body);
+
+        let request = http::Request::builder()
+            .method("POST")
+            .uri(url)
+            .header(
+                http::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .header(http::header::CONTENT_LENGTH, body.len())
+            .body(body)?;
+
+        Ok(TokenOrRequest::Request {
+            request,
+            reason: RequestReason::ScopesChanged,
+            scope_hash: 0,
+        })
+    }
+
+    fn parse_token_response<S>(
+        &self,
+        _hash: u64,
+        response: http::Response<S>,
+    ) -> Result<Token, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        let (parts, body) = response.into_parts();
+
+        if !parts.status.is_success() {
+            return Err(Error::HttpStatus(parts.status));
+        }
+
+        // Deserialize our response, or fail.
+        let token_res: TokenResponse = serde_json::from_slice(body.as_ref())?;
+
+        // TODO(boulos): The response also includes the set of scopes
+        // (as "scope") that we're granted. We could check that
+        // cloud-platform is in it.
+
+        // Convert it into our output.
+        let token: Token = token_res.into();
+        Ok(token)
+    }
+}
+
+/// Simple wrapper of our three GCP token providers.
+pub enum TokenProviderWrapper {
+    EndUser(EndUserCredentials),
+    Metadata(MetadataServerProvider),
+    ServiceAccount(ServiceAccountAccess),
+}
+
+/// Implement `TokenProvider` for `TokenProviderWrapper` so that
+/// clients don't have to do the dispatch themselves.
+impl TokenProvider for TokenProviderWrapper {
+    fn get_token_with_subject<'a, S, I, T>(
+        &self,
+        subject: Option<T>,
+        scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+        T: Into<String>,
+    {
+        match self {
+            Self::EndUser(x) => x.get_token_with_subject(subject, scopes),
+            Self::Metadata(x) => x.get_token_with_subject(subject, scopes),
+            Self::ServiceAccount(x) => x.get_token_with_subject(subject, scopes),
+        }
+    }
+
+    fn parse_token_response<S>(
+        &self,
+        hash: u64,
+        response: http::Response<S>,
+    ) -> Result<Token, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        match self {
+            Self::EndUser(x) => x.parse_token_response(hash, response),
+            Self::Metadata(x) => x.parse_token_response(hash, response),
+            Self::ServiceAccount(x) => x.parse_token_response(hash, response),
+        }
+    }
+}
+
+/// Get the path to the gcloud `application_default_credentials.json`
+/// file. This function respects the `CLOUDSDK_CONFIG` environment
+/// variable. If unset, it looks in the platform-specific gcloud
+/// configuration directories (%APPDATA%/gcloud on Windows or
+/// $HOME/.config/gcloud otherwise).
+fn gcloud_config_file() -> Result<std::path::PathBuf, std::env::VarError> {
+    let cred_file = "application_default_credentials.json";
+    // If the user has set CLOUDSDK_CONFIG, that overrides the default directory.
+    let env_key = "CLOUDSDK_CONFIG";
+    let override_dir_or_none = std::env::var(env_key);
+
+    if let Ok(override_dir) = override_dir_or_none {
+        return Ok(std::path::Path::new(&override_dir).join(cred_file));
+    }
+
+    // Otherwise, use the default for the
+    // platform. %APPDATA%/gcloud/<file> on Windows and
+    // $HOME/.config/gcloud/<file> elsewhere.
+    let base_dir = if cfg!(windows) {
+        std::path::Path::new(&std::env::var("APPDATA")?).to_path_buf()
+    } else {
+        std::path::Path::new(&std::env::var("HOME")?).join(".config")
+    };
+
+    Ok(base_dir.join("gcloud").join(cred_file))
+}
+
+/// Get a `TokenProvider` following the "Google Default Credentials"
+/// flow, in order:
+///
+///  * If the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is
+///    set. Use that as a path to a service account JSON file.
+///
+///  * Check for a gcloud config file (see `gcloud_config_file`) to
+///    get `EndUserCredentials`.
+///
+///  * If we're running on GCP, use the local metadata server.
+///
+///  * Otherwise, return None.
+pub fn get_default_google_credentials() -> Option<TokenProviderWrapper> {
+    // Read in the usual key file.
+    let env_key = "GOOGLE_APPLICATION_CREDENTIALS";
+    // Use var_os to get the path.
+    let cred_env = std::env::var_os(env_key);
+
+    // If the environment variable is present, try to open it as a
+    // Service Account. Otherwise, proceed to step 2 (checking the
+    // gcloud credentials).
+    if let Some(cred_path) = cred_env {
+        let key_data = std::fs::read_to_string(cred_path).expect("Failed to read credential file");
+        let acct_info =
+            ServiceAccountInfo::deserialize(key_data).expect("Failed to decode credential file");
+
+        return Some(TokenProviderWrapper::ServiceAccount(
+            ServiceAccountAccess::new(acct_info).expect("failed to create OAuth Token Provider"),
+        ));
+    }
+
+    let gcloud_file = gcloud_config_file();
+    if let Ok(gcloud_file) = gcloud_file {
+        let gcloud_data = std::fs::read_to_string(gcloud_file);
+
+        match gcloud_data {
+            Ok(json_data) => {
+                let end_user_credentials = EndUserCredentials::deserialize(json_data)
+                    .expect("Failed to decode application_default_credentials.json");
+                return Some(TokenProviderWrapper::EndUser(end_user_credentials));
+            }
+            Err(error) => match error.kind() {
+                // Skip not found errors, so we fall to the metadata server check.
+                std::io::ErrorKind::NotFound => {}
+                other_error => panic!(
+                    "Failed to open gcloud credential file. Error {:?}",
+                    other_error
+                ),
+            },
+        }
+    }
+
+    // Finaly, if we are on GCP, use the metadata server. If we're not
+    // on GCP, this will just fail to read the file.
+    let product_file = "/sys/class/dmi/id/product_name";
+    let product_name = std::fs::read_to_string(product_file);
+
+    if let Ok(full_name) = product_name {
+        // The product name can annoyingly include a newline...
+        let trimmed = full_name.trim();
+        match trimmed {
+            // This matches the Golang client. If new products
+            // add additional values, this will need to be updated.
+            "Google" | "Google Compute Engine" => {
+                return Some(TokenProviderWrapper::Metadata(MetadataServerProvider::new(
+                    None,
+                )));
+            }
+            _ => {}
+        }
+    }
+
+    // None of our checks worked. Give up.
+    None
+}
+
 impl From<TokenResponse> for Token {
     fn from(tr: TokenResponse) -> Self {
         let expires_ts = chrono::Utc::now().timestamp() + tr.expires_in;
@@ -418,6 +684,65 @@ mod test {
     fn metadata_with_scopes() {
         let provider = MetadataServerProvider::new(None);
 
+        let scopes: Vec<&str> = vec!["scope1", "scope2"];
+
+        let token_or_req = provider
+            .get_token(&scopes)
+            .expect("Should have gotten a request");
+
+        match token_or_req {
+            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
+            TokenOrRequest::Request { request, .. } => {
+                // Should be the metadata server
+                assert_eq!(request.uri().host(), Some("metadata.google.internal"));
+                // Since we had some scopes, we should have a querystring.
+                assert!(request.uri().query().is_some());
+
+                let query_string = request.uri().query().unwrap();
+                // We don't care about ordering, but the query_string
+                // should be comma-separated and only include the
+                // scopes.
+                assert!(
+                    query_string == "scopes=scope1,scope2"
+                        || query_string == "scopes=scope2,scope1"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn end_user_credentials() {
+        let provider = EndUserCredentials {
+            client_id: "fake_client@domain.com".into(),
+            client_secret: "TOP_SECRET".into(),
+            refresh_token: "REFRESH_TOKEN".into(),
+            client_type: "authorized_user".into(),
+        };
+
+        // End-user credentials don't let you override scopes.
+        let scopes: Vec<&str> = vec!["better_not_be_there"];
+
+        let token_or_req = provider
+            .get_token(&scopes)
+            .expect("Should have gotten a request");
+
+        match token_or_req {
+            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
+            TokenOrRequest::Request { request, .. } => {
+                // Should be the Google oauth2 API
+                assert_eq!(request.uri().host(), Some("oauth2.googleapis.com"));
+                // Scopes aren't passed for end user credentials
+                assert_eq!(request.uri().query(), None);
+            }
+        }
+    }
+
+    #[test]
+    fn wrapper_dispatch() {
+        // Wrap the metadata server provider.
+        let provider = TokenProviderWrapper::Metadata(MetadataServerProvider::new(None));
+
+        // And then have the same test as metadata_with_scopes
         let scopes: Vec<&str> = vec!["scope1", "scope2"];
 
         let token_or_req = provider
