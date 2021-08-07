@@ -1,17 +1,24 @@
 use crate::{
-    error::{AuthError, Error},
-    token::{RequestReason, Token, TokenOrRequest, TokenProvider},
+    error::Error,
+    token::{Token, TokenOrRequest, TokenProvider},
 };
 
+mod end_user;
 mod jwt;
+mod metadata_server;
 mod service_account;
+
+use end_user as eu;
+use metadata_server as ms;
 use service_account as sa;
 
 pub mod prelude {
     pub use super::{
+        eu::EndUserCredentials,
         get_default_google_credentials,
+        ms::MetadataServerProvider,
         sa::{ServiceAccountAccess, ServiceAccountInfo},
-        EndUserCredentials, MetadataServerProvider, TokenProviderWrapper,
+        TokenProviderWrapper,
     };
     pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 }
@@ -19,10 +26,6 @@ pub mod prelude {
 struct Entry {
     hash: u64,
     token: Token,
-}
-
-pub struct MetadataServerProvider {
-    account_name: String,
 }
 
 /// Both the `ServiceAccountAccess` and `MetadataServerProvider` get
@@ -37,224 +40,10 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-impl MetadataServerProvider {
-    pub fn new(account_name: Option<String>) -> Self {
-        if let Some(name) = account_name {
-            Self { account_name: name }
-        } else {
-            // GCP uses "default" as the name in URIs.
-            Self {
-                account_name: "default".to_string(),
-            }
-        }
-    }
-}
-
-impl TokenProvider for MetadataServerProvider {
-    fn get_token_with_subject<'a, S, I, T>(
-        &self,
-        subject: Option<T>,
-        scopes: I,
-    ) -> Result<TokenOrRequest, Error>
-    where
-        S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
-        T: Into<String>,
-    {
-        // We can only support subject being none
-        if subject.is_some() {
-            return Err(Error::Auth(AuthError {
-                error: Some("Unsupported".to_string()),
-                error_description: Some(
-                    "Metadata server tokens do not support jwt subjects".to_string(),
-                ),
-            }));
-        }
-
-        // Regardless of GCE or GAE, the token_uri is
-        // computeMetadata/v1/instance/service-accounts/<name or
-        // id>/token.
-        let mut url = format!(
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/{}/token",
-            self.account_name
-        );
-
-        // Merge all the scopes into a single string.
-        let scopes_str = scopes
-            .into_iter()
-            .map(|s| s.as_ref())
-            .collect::<Vec<&str>>()
-            .join(",");
-
-        // If we have any scopes, pass them along in the querystring.
-        if !scopes_str.is_empty() {
-            url.push_str("?scopes=");
-            url.push_str(&scopes_str);
-        }
-
-        // Make an empty body, but as Vec<u8> to match the request in
-        // TokenOrRequest.
-        let empty_body: Vec<u8> = vec![];
-
-        let request = http::Request::builder()
-            .method("GET")
-            .uri(url)
-            // To get responses from GCE, we must pass along the
-            // Metadata-Flavor header with a value of "Google".
-            .header("Metadata-Flavor", "Google")
-            .body(empty_body)?;
-
-        Ok(TokenOrRequest::Request {
-            request,
-            reason: RequestReason::ScopesChanged,
-            scope_hash: 0,
-        })
-    }
-
-    fn parse_token_response<S>(
-        &self,
-        _hash: u64,
-        response: http::Response<S>,
-    ) -> Result<Token, Error>
-    where
-        S: AsRef<[u8]>,
-    {
-        let (parts, body) = response.into_parts();
-
-        if !parts.status.is_success() {
-            return Err(Error::HttpStatus(parts.status));
-        }
-
-        // Deserialize our response, or fail.
-        let token_res: TokenResponse = serde_json::from_slice(body.as_ref())?;
-
-        // Convert it into our output.
-        let token: Token = token_res.into();
-        Ok(token)
-    }
-}
-
-/// The fields from a well formed `application_default_credentials.json`.
-#[derive(serde::Deserialize, Debug, Clone)]
-pub struct EndUserCredentials {
-    /// The OAuth2 client_id
-    pub client_id: String,
-    /// The OAuth2 client_secret
-    pub client_secret: String,
-    /// The OAuth2 refresh_token
-    pub refresh_token: String,
-    /// The client type (the value must be authorized_user)
-    #[serde(rename = "type")]
-    pub client_type: String,
-}
-
-impl EndUserCredentials {
-    /// Deserializes the `EndUserCredentials` from a byte slice. This
-    /// data is typically acquired by reading an
-    /// `application_default_credentials.json` file from disk.
-    pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
-    where
-        T: AsRef<[u8]>,
-    {
-        let slice = key_data.as_ref();
-
-        let account_info: Self = serde_json::from_slice(slice)?;
-        Ok(account_info)
-    }
-}
-
-impl TokenProvider for EndUserCredentials {
-    fn get_token_with_subject<'a, S, I, T>(
-        &self,
-        subject: Option<T>,
-        // EndUserCredentials only have the scopes they were granted
-        // via their authorization. So whatever scopes you're asking
-        // for, better have been handled when authorized. `gcloud auth
-        // application-default login` will get the
-        // https://www.googleapis.com/auth/cloud-platform which
-        // includes all *GCP* APIs.
-        _scopes: I,
-    ) -> Result<TokenOrRequest, Error>
-    where
-        S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
-        T: Into<String>,
-    {
-        // We can only support subject being none
-        if subject.is_some() {
-            return Err(Error::Auth(AuthError {
-                error: Some("Unsupported".to_string()),
-                error_description: Some(
-                    "ADC / User tokens do not support jwt subjects".to_string(),
-                ),
-            }));
-        }
-
-        // To get an access token, we need to perform a refresh
-        // following the instructions at
-        // https://developers.google.com/identity/protocols/oauth2/web-server#offline
-        // (i.e., POST our client data as a refresh_token request to
-        // the /token endpoint).
-        let url = "https://oauth2.googleapis.com/token";
-
-        // Build up the parameters as a form encoded string.
-        let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("client_id", &self.client_id)
-            .append_pair("client_secret", &self.client_secret)
-            .append_pair("grant_type", "refresh_token")
-            .append_pair("refresh_token", &self.refresh_token)
-            .finish();
-
-        let body = Vec::from(body);
-
-        let request = http::Request::builder()
-            .method("POST")
-            .uri(url)
-            .header(
-                http::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .header(http::header::CONTENT_LENGTH, body.len())
-            .body(body)?;
-
-        Ok(TokenOrRequest::Request {
-            request,
-            reason: RequestReason::ScopesChanged,
-            scope_hash: 0,
-        })
-    }
-
-    fn parse_token_response<S>(
-        &self,
-        _hash: u64,
-        response: http::Response<S>,
-    ) -> Result<Token, Error>
-    where
-        S: AsRef<[u8]>,
-    {
-        let (parts, body) = response.into_parts();
-
-        if !parts.status.is_success() {
-            return Err(Error::HttpStatus(parts.status));
-        }
-
-        // Deserialize our response, or fail.
-        let token_res: TokenResponse = serde_json::from_slice(body.as_ref())?;
-
-        // TODO(boulos): The response also includes the set of scopes
-        // (as "scope") that we're granted. We could check that
-        // cloud-platform is in it.
-
-        // Convert it into our output.
-        let token: Token = token_res.into();
-        Ok(token)
-    }
-}
-
 /// Simple wrapper of our three GCP token providers.
 pub enum TokenProviderWrapper {
-    EndUser(EndUserCredentials),
-    Metadata(MetadataServerProvider),
+    EndUser(eu::EndUserCredentials),
+    Metadata(ms::MetadataServerProvider),
     ServiceAccount(sa::ServiceAccountAccess),
 }
 
@@ -359,7 +148,7 @@ pub fn get_default_google_credentials() -> Option<TokenProviderWrapper> {
 
         match gcloud_data {
             Ok(json_data) => {
-                let end_user_credentials = EndUserCredentials::deserialize(json_data)
+                let end_user_credentials = eu::EndUserCredentials::deserialize(json_data)
                     .expect("Failed to decode application_default_credentials.json");
                 return Some(TokenProviderWrapper::EndUser(end_user_credentials));
             }
@@ -386,9 +175,9 @@ pub fn get_default_google_credentials() -> Option<TokenProviderWrapper> {
             // This matches the Golang client. If new products
             // add additional values, this will need to be updated.
             "Google" | "Google Compute Engine" => {
-                return Some(TokenProviderWrapper::Metadata(MetadataServerProvider::new(
-                    None,
-                )));
+                return Some(TokenProviderWrapper::Metadata(
+                    ms::MetadataServerProvider::new(None),
+                ));
             }
             _ => {}
         }
@@ -408,121 +197,6 @@ impl From<TokenResponse> for Token {
             refresh_token: String::new(),
             expires_in: Some(tr.expires_in),
             expires_in_timestamp: Some(expires_ts),
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn metadata_noscopes() {
-        let provider = MetadataServerProvider::new(None);
-
-        let scopes: Vec<&str> = vec![];
-
-        let token_or_req = provider
-            .get_token(&scopes)
-            .expect("Should have gotten a request");
-
-        match token_or_req {
-            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
-            TokenOrRequest::Request { request, .. } => {
-                // Should be the metadata server
-                assert_eq!(request.uri().host(), Some("metadata.google.internal"));
-                // Since we had no scopes, no querystring.
-                assert_eq!(request.uri().query(), None);
-            }
-        }
-    }
-
-    #[test]
-    fn metadata_with_scopes() {
-        let provider = MetadataServerProvider::new(None);
-
-        let scopes: Vec<&str> = vec!["scope1", "scope2"];
-
-        let token_or_req = provider
-            .get_token(&scopes)
-            .expect("Should have gotten a request");
-
-        match token_or_req {
-            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
-            TokenOrRequest::Request { request, .. } => {
-                // Should be the metadata server
-                assert_eq!(request.uri().host(), Some("metadata.google.internal"));
-                // Since we had some scopes, we should have a querystring.
-                assert!(request.uri().query().is_some());
-
-                let query_string = request.uri().query().unwrap();
-                // We don't care about ordering, but the query_string
-                // should be comma-separated and only include the
-                // scopes.
-                assert!(
-                    query_string == "scopes=scope1,scope2"
-                        || query_string == "scopes=scope2,scope1"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn end_user_credentials() {
-        let provider = EndUserCredentials {
-            client_id: "fake_client@domain.com".into(),
-            client_secret: "TOP_SECRET".into(),
-            refresh_token: "REFRESH_TOKEN".into(),
-            client_type: "authorized_user".into(),
-        };
-
-        // End-user credentials don't let you override scopes.
-        let scopes: Vec<&str> = vec!["better_not_be_there"];
-
-        let token_or_req = provider
-            .get_token(&scopes)
-            .expect("Should have gotten a request");
-
-        match token_or_req {
-            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
-            TokenOrRequest::Request { request, .. } => {
-                // Should be the Google oauth2 API
-                assert_eq!(request.uri().host(), Some("oauth2.googleapis.com"));
-                // Scopes aren't passed for end user credentials
-                assert_eq!(request.uri().query(), None);
-            }
-        }
-    }
-
-    #[test]
-    fn wrapper_dispatch() {
-        // Wrap the metadata server provider.
-        let provider = TokenProviderWrapper::Metadata(MetadataServerProvider::new(None));
-
-        // And then have the same test as metadata_with_scopes
-        let scopes: Vec<&str> = vec!["scope1", "scope2"];
-
-        let token_or_req = provider
-            .get_token(&scopes)
-            .expect("Should have gotten a request");
-
-        match token_or_req {
-            TokenOrRequest::Token(_) => panic!("Shouldn't have gotten a token"),
-            TokenOrRequest::Request { request, .. } => {
-                // Should be the metadata server
-                assert_eq!(request.uri().host(), Some("metadata.google.internal"));
-                // Since we had some scopes, we should have a querystring.
-                assert!(request.uri().query().is_some());
-
-                let query_string = request.uri().query().unwrap();
-                // We don't care about ordering, but the query_string
-                // should be comma-separated and only include the
-                // scopes.
-                assert!(
-                    query_string == "scopes=scope1,scope2"
-                        || query_string == "scopes=scope2,scope1"
-                );
-            }
         }
     }
 }
