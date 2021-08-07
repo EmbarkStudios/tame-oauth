@@ -54,7 +54,7 @@ impl TokenProvider for MetadataServerProvider {
         let scopes_str = scopes
             .into_iter()
             .map(|s| s.as_ref())
-            .collect::<Vec<&str>>()
+            .collect::<Vec<_>>()
             .join(",");
 
         // If we have any scopes, pass them along in the querystring.
@@ -63,17 +63,13 @@ impl TokenProvider for MetadataServerProvider {
             url.push_str(&scopes_str);
         }
 
-        // Make an empty body, but as Vec<u8> to match the request in
-        // TokenOrRequest.
-        let empty_body: Vec<u8> = vec![];
-
         let request = http::Request::builder()
             .method("GET")
             .uri(url)
             // To get responses from GCE, we must pass along the
             // Metadata-Flavor header with a value of "Google".
             .header("Metadata-Flavor", "Google")
-            .body(empty_body)?;
+            .body(Vec::new())?;
 
         Ok(TokenOrRequest::Request {
             request,
@@ -113,10 +109,10 @@ mod test {
     fn metadata_noscopes() {
         let provider = MetadataServerProvider::new(None);
 
-        let scopes: Vec<&str> = vec![];
+        let scopes: &[&str] = &[];
 
         let token_or_req = provider
-            .get_token(&scopes)
+            .get_token(scopes)
             .expect("Should have gotten a request");
 
         match token_or_req {
@@ -134,7 +130,7 @@ mod test {
     fn metadata_with_scopes() {
         let provider = MetadataServerProvider::new(None);
 
-        let scopes: Vec<&str> = vec!["scope1", "scope2"];
+        let scopes = ["scope1", "scope2"];
 
         let token_or_req = provider
             .get_token(&scopes)
@@ -167,7 +163,7 @@ mod test {
             crate::gcp::TokenProviderWrapper::Metadata(MetadataServerProvider::new(None));
 
         // And then have the same test as metadata_with_scopes
-        let scopes: Vec<&str> = vec!["scope1", "scope2"];
+        let scopes = ["scope1", "scope2"];
 
         let token_or_req = provider
             .get_token(&scopes)

@@ -1,11 +1,10 @@
 use tame_oauth::gcp::prelude::*;
 
-// This example shows the basics for creating a GCP service account
-// token provider and requesting a token from it. This particular
-// example uses the reqwest HTTP client, but the point of this
-// crate is that you can use whichever one you like as long as you
-// don't mind doing a little bit of boiler to convert between
-// from http::Request and to http::Response
+// This example shows the basics for creating a GCP service account token
+// provider and requesting a token from it. This particular example uses the
+// reqwest HTTP client, but the point of this crate is that you can use
+// whichever one you like as long as you don't mind doing a little bit of
+// boilerplate to convert between from http::Request and to http::Response
 #[tokio::main]
 async fn main() {
     let mut args = std::env::args().skip(1);

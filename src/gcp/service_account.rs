@@ -83,7 +83,7 @@ impl ServiceAccountAccess {
     {
         use std::hash::Hasher;
 
-        let scopes = scopes.map(|s| s.as_ref()).collect::<Vec<&str>>().join(" ");
+        let scopes = scopes.map(|s| s.as_ref()).collect::<Vec<_>>().join(" ");
         let hash = {
             let mut hasher = twox_hash::XxHash::default();
             hasher.write(scopes.as_bytes());

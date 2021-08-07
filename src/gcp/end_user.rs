@@ -135,7 +135,7 @@ mod test {
         };
 
         // End-user credentials don't let you override scopes.
-        let scopes: Vec<&str> = vec!["better_not_be_there"];
+        let scopes = vec!["better_not_be_there"];
 
         let token_or_req = provider
             .get_token(&scopes)
