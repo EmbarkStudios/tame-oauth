@@ -25,6 +25,13 @@ pub enum Error {
     InvalidRsaKeyRejected(ring::error::KeyRejected),
     /// A mutex has been poisoned due to a panic while a lock was held
     Poisoned,
+    #[cfg(feature = "gcp")]
+    Io(std::io::Error),
+    #[cfg(feature = "gcp")]
+    InvalidCredentials {
+        file: std::path::PathBuf,
+        error: Box<Error>,
+    },
 }
 
 impl fmt::Display for Error {
@@ -45,6 +52,12 @@ impl fmt::Display for Error {
             #[cfg(feature = "jwt")]
             InvalidRsaKeyRejected(err) => write!(f, "RSA key is invalid: {}", err),
             Poisoned => f.write_str("A mutex is poisoned"),
+            #[cfg(feature = "gcp")]
+            Io(inner) => write!(f, "{}", inner),
+            #[cfg(feature = "gcp")]
+            InvalidCredentials { file, error } => {
+                write!(f, "Invalid credentials in '{}': {}", file.display(), error)
+            }
         }
     }
 }

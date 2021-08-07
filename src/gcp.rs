@@ -15,7 +15,6 @@ use service_account as sa;
 pub mod prelude {
     pub use super::{
         eu::EndUserCredentials,
-        get_default_google_credentials,
         ms::MetadataServerProvider,
         sa::{ServiceAccountAccess, ServiceAccountInfo},
         TokenProviderWrapper,
@@ -47,8 +46,145 @@ pub enum TokenProviderWrapper {
     ServiceAccount(sa::ServiceAccountAccess),
 }
 
-/// Implement `TokenProvider` for `TokenProviderWrapper` so that
-/// clients don't have to do the dispatch themselves.
+impl TokenProviderWrapper {
+    /// Get a `TokenProvider` following the "Google Default Credentials"
+    /// flow, in order:
+    ///
+    ///  * If the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is
+    ///    set. Use that as a path to a service account JSON file.
+    ///
+    ///  * Check for a gcloud config file (see `gcloud_config_file`) to
+    ///    get `EndUserCredentials`.
+    ///
+    ///  * If we're running on GCP, use the local metadata server.
+    ///
+    ///  * Otherwise, return None.
+    ///
+    /// If it appears that a method is being used, but is actually invalid,
+    /// eg `GOOGLE_APPLICATION_CREDENTIALS` is set but the file doesn't exist or
+    /// contains invalid JSON, an error is returned with the details
+    pub fn get_default_provider() -> Result<Option<Self>, Error> {
+        use std::{fs::read_to_string, path::PathBuf};
+
+        // If the environment variable is present, try to open it as a
+        // Service Account.
+        if let Some(cred_path) = std::env::var_os("GOOGLE_APPLICATION_CREDENTIALS") {
+            let key_data = match read_to_string(&cred_path) {
+                Ok(kd) => kd,
+                Err(e) => {
+                    return Err(Error::InvalidCredentials {
+                        file: cred_path.into(),
+                        error: Box::new(Error::Io(e)),
+                    });
+                }
+            };
+
+            let sa_info = match sa::ServiceAccountInfo::deserialize(key_data) {
+                Ok(si) => si,
+                Err(e) => {
+                    return Err(Error::InvalidCredentials {
+                        file: cred_path.into(),
+                        error: Box::new(e),
+                    });
+                }
+            };
+
+            return Ok(Some(TokenProviderWrapper::ServiceAccount(
+                sa::ServiceAccountAccess::new(sa_info).map_err(|e| Error::InvalidCredentials {
+                    file: cred_path.into(),
+                    error: Box::new(e),
+                })?,
+            )));
+        }
+
+        /// Get the path to the gcloud `application_default_credentials.json`
+        /// file. This function respects the `CLOUDSDK_CONFIG` environment
+        /// variable. If unset, it looks in the platform-specific gcloud
+        /// configuration directories
+        fn gcloud_config_file() -> Option<PathBuf> {
+            let cred_file = "application_default_credentials.json";
+
+            // If the user has set CLOUDSDK_CONFIG, that overrides the default directory.
+            if let Some(override_dir) = std::env::var_os("CLOUDSDK_CONFIG") {
+                let mut pb = PathBuf::from(override_dir);
+                pb.push(cred_file);
+                return Some(pb);
+            }
+
+            // Otherwise, use the default for the platform.
+            // * Windows - %APPDATA%/gcloud/<file>
+            // * Unix - $HOME/.config/gcloud/<file>
+            if cfg!(windows) {
+                std::env::var_os("APPDATA").map(PathBuf::from)
+            } else {
+                std::env::var_os("HOME").map(|pb| {
+                    let mut pb = PathBuf::from(pb);
+                    pb.push(".config");
+                    pb
+                })
+            }
+            .map(|mut bd| {
+                bd.push("gcloud");
+                bd.push(cred_file);
+                bd
+            })
+        }
+
+        if let Some(gcloud_file) = gcloud_config_file() {
+            match read_to_string(&gcloud_file) {
+                Ok(json_data) => {
+                    let end_user_credentials = eu::EndUserCredentials::deserialize(json_data)
+                        .map_err(|e| Error::InvalidCredentials {
+                            file: gcloud_file,
+                            error: Box::new(e),
+                        })?;
+
+                    return Ok(Some(TokenProviderWrapper::EndUser(end_user_credentials)));
+                }
+                // Skip not found errors, and fall back to the metadata server check
+                Err(nf) if nf.kind() == std::io::ErrorKind::NotFound => {}
+                Err(err) => {
+                    return Err(Error::InvalidCredentials {
+                        file: gcloud_file,
+                        error: Box::new(Error::Io(err)),
+                    });
+                }
+            }
+        }
+
+        // Finaly, if we are on GCP, use the metadata server. If we're not on
+        // GCP, this will just fail to read the file.
+        if let Ok(full_name) = read_to_string("/sys/class/dmi/id/product_name") {
+            // The product name can annoyingly include a newline...
+            let trimmed = full_name.trim();
+            match trimmed {
+                // This matches the Golang client. If new products
+                // add additional values, this will need to be updated.
+                "Google" | "Google Compute Engine" => {
+                    return Ok(Some(TokenProviderWrapper::Metadata(
+                        ms::MetadataServerProvider::new(None),
+                    )));
+                }
+                _ => {}
+            }
+        }
+
+        // None of our checks worked. Give up.
+        Ok(None)
+    }
+
+    /// Gets the kind of token provider
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::EndUser(_) => "End User",
+            Self::Metadata(_) => "Metadata Server",
+            Self::ServiceAccount(_) => "Service Account",
+        }
+    }
+}
+
+/// Implement `TokenProvider` for `TokenProviderWrapper` so that clients don't
+/// have to do the dispatch themselves.
 impl TokenProvider for TokenProviderWrapper {
     fn get_token_with_subject<'a, S, I, T>(
         &self,
@@ -81,110 +217,6 @@ impl TokenProvider for TokenProviderWrapper {
             Self::ServiceAccount(x) => x.parse_token_response(hash, response),
         }
     }
-}
-
-/// Get the path to the gcloud `application_default_credentials.json`
-/// file. This function respects the `CLOUDSDK_CONFIG` environment
-/// variable. If unset, it looks in the platform-specific gcloud
-/// configuration directories (%APPDATA%/gcloud on Windows or
-/// $HOME/.config/gcloud otherwise).
-fn gcloud_config_file() -> Result<std::path::PathBuf, std::env::VarError> {
-    let cred_file = "application_default_credentials.json";
-    // If the user has set CLOUDSDK_CONFIG, that overrides the default directory.
-    let env_key = "CLOUDSDK_CONFIG";
-    let override_dir_or_none = std::env::var(env_key);
-
-    if let Ok(override_dir) = override_dir_or_none {
-        return Ok(std::path::Path::new(&override_dir).join(cred_file));
-    }
-
-    // Otherwise, use the default for the
-    // platform. %APPDATA%/gcloud/<file> on Windows and
-    // $HOME/.config/gcloud/<file> elsewhere.
-    let base_dir = if cfg!(windows) {
-        std::path::Path::new(&std::env::var("APPDATA")?).to_path_buf()
-    } else {
-        std::path::Path::new(&std::env::var("HOME")?).join(".config")
-    };
-
-    Ok(base_dir.join("gcloud").join(cred_file))
-}
-
-/// Get a `TokenProvider` following the "Google Default Credentials"
-/// flow, in order:
-///
-///  * If the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is
-///    set. Use that as a path to a service account JSON file.
-///
-///  * Check for a gcloud config file (see `gcloud_config_file`) to
-///    get `EndUserCredentials`.
-///
-///  * If we're running on GCP, use the local metadata server.
-///
-///  * Otherwise, return None.
-pub fn get_default_google_credentials() -> Option<TokenProviderWrapper> {
-    // Read in the usual key file.
-    let env_key = "GOOGLE_APPLICATION_CREDENTIALS";
-    // Use var_os to get the path.
-    let cred_env = std::env::var_os(env_key);
-
-    // If the environment variable is present, try to open it as a
-    // Service Account. Otherwise, proceed to step 2 (checking the
-    // gcloud credentials).
-    if let Some(cred_path) = cred_env {
-        let key_data = std::fs::read_to_string(cred_path).expect("Failed to read credential file");
-        let acct_info = sa::ServiceAccountInfo::deserialize(key_data)
-            .expect("Failed to decode credential file");
-
-        return Some(TokenProviderWrapper::ServiceAccount(
-            sa::ServiceAccountAccess::new(acct_info)
-                .expect("failed to create OAuth Token Provider"),
-        ));
-    }
-
-    let gcloud_file = gcloud_config_file();
-    if let Ok(gcloud_file) = gcloud_file {
-        let gcloud_data = std::fs::read_to_string(gcloud_file);
-
-        match gcloud_data {
-            Ok(json_data) => {
-                let end_user_credentials = eu::EndUserCredentials::deserialize(json_data)
-                    .expect("Failed to decode application_default_credentials.json");
-                return Some(TokenProviderWrapper::EndUser(end_user_credentials));
-            }
-            Err(error) => match error.kind() {
-                // Skip not found errors, so we fall to the metadata server check.
-                std::io::ErrorKind::NotFound => {}
-                other_error => panic!(
-                    "Failed to open gcloud credential file. Error {:?}",
-                    other_error
-                ),
-            },
-        }
-    }
-
-    // Finaly, if we are on GCP, use the metadata server. If we're not
-    // on GCP, this will just fail to read the file.
-    let product_file = "/sys/class/dmi/id/product_name";
-    let product_name = std::fs::read_to_string(product_file);
-
-    if let Ok(full_name) = product_name {
-        // The product name can annoyingly include a newline...
-        let trimmed = full_name.trim();
-        match trimmed {
-            // This matches the Golang client. If new products
-            // add additional values, this will need to be updated.
-            "Google" | "Google Compute Engine" => {
-                return Some(TokenProviderWrapper::Metadata(
-                    ms::MetadataServerProvider::new(None),
-                ));
-            }
-            _ => {}
-        }
-    }
-
-    // None of our checks worked. Give up.
-    None
 }
 
 impl From<TokenResponse> for Token {
