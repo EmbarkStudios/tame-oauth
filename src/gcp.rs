@@ -1,13 +1,9 @@
 //! Provides functionality for
 //! [Google oauth](https://developers.google.com/identity/protocols/oauth2)
 
-use crate::{
-    error::Error,
-    token::{Token, TokenOrRequest, TokenProvider},
-};
+use crate::{error::Error, jwt};
 
 mod end_user;
-mod jwt;
 mod metadata_server;
 mod service_account;
 
@@ -15,15 +11,12 @@ use end_user as eu;
 use metadata_server as ms;
 use service_account as sa;
 
-pub mod prelude {
-    pub use super::{
-        eu::EndUserCredentials,
-        ms::MetadataServerProvider,
-        sa::{ServiceAccountInfo, ServiceAccountProvider},
-        TokenProviderWrapper,
-    };
-    pub use crate::token::{Token, TokenOrRequest, TokenProvider};
-}
+pub use crate::token::{Token, TokenOrRequest, TokenProvider};
+pub use {
+    eu::EndUserCredentials,
+    ms::MetadataServerProvider,
+    sa::{ServiceAccountInfo, ServiceAccountProvider},
+};
 
 struct Entry {
     hash: u64,

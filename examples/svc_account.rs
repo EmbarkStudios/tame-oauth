@@ -1,4 +1,4 @@
-use tame_oauth::gcp::prelude::*;
+use tame_oauth::gcp::*;
 
 // This example shows the basics for creating a GCP service account token
 // provider and requesting a token from it. This particular example uses the

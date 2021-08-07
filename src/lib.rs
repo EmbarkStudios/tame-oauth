@@ -73,6 +73,8 @@
 
 #[cfg(feature = "gcp")]
 pub mod gcp;
+#[cfg(feature = "jwt")]
+mod jwt;
 
 mod error;
 mod token;

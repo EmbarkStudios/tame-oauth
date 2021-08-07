@@ -1,4 +1,4 @@
-use tame_oauth::gcp::prelude::*;
+use tame_oauth::gcp::*;
 
 // This example shows the basics for creating a token provider for the default
 // credentials on the system. If you want to use a service account, set
