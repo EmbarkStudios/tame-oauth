@@ -18,15 +18,15 @@ async fn main() {
     // Deserialize the service account info from the json data
     let acct_info = ServiceAccountInfo::deserialize(service_key).unwrap();
 
-    // Create the token provider...should probably rename this!
-    let acct_access = ServiceAccountAccess::new(acct_info).unwrap();
+    // Create the token provider!
+    let sa_provider = ServiceAccountProvider::new(acct_info).unwrap();
 
     // Attempt to get a token, since we have never used this accessor
     // before, it's guaranteed that we will need to make an HTTPS
     // request to the token provider to retrieve a token. This
     // will also happen if we want to get a token for a different set
     // of scopes, or if the token has expired.
-    let token = match acct_access.get_token(&scopes).unwrap() {
+    let token = match sa_provider.get_token(&scopes).unwrap() {
         TokenOrRequest::Request {
             // This is an http::Request that we can use to build
             // a client request for whichever HTTP client implementation
@@ -78,7 +78,7 @@ async fn main() {
             // the scope_hash for the scopes we initially requested,
             // this will allow future token requests for those scopes
             // to use a cached token, at least until it expires (~1 hour)
-            acct_access
+            sa_provider
                 .parse_token_response(scope_hash, response)
                 .unwrap()
         }
@@ -91,7 +91,7 @@ async fn main() {
 
     // Retrieving a token for the same scopes for which a token has been acquired
     // will use the cached token until it expires
-    match acct_access.get_token(&scopes).unwrap() {
+    match sa_provider.get_token(&scopes).unwrap() {
         TokenOrRequest::Token(tk) => {
             assert_eq!(tk, token);
             println!(

@@ -36,6 +36,14 @@ A small example of using `tame-oauth` together with [reqwest](https://github.com
 
 `cargo run --example svc_account -- ~/.secrets/super-sekret.json https://www.googleapis.com/auth/pubsub https://www.googleapis.com/auth/devstorage.read_only`
 
+### [default_creds](examples/default_creds.rs)
+
+Usage: `cargo run --example default_creds -- <scope..>`
+
+Attempts to find and use the default credentials to get a token. Note that scopes are not used in all cases as eg. end user credentials only ever have the cloud platform scope.
+
+`cargo run --example default_creds -- https://www.googleapis.com/auth/devstorage.read_only`
+
 ## Contributing
 
 [![Contributor Covenant](https://img.shields.io/badge/contributor%20covenant-v1.4-ff69b4.svg)](../CODE_OF_CONDUCT.md)
@@ -48,8 +56,8 @@ Please read our [Contributor Guide](CONTRIBUTING.md) for more information on how
 
 Licensed under either of
 
-* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+* MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 
