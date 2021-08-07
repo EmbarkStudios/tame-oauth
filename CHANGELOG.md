@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.6.0] - 2021-08-07
 ### Added
 - [PR#40](https://github.com/EmbarkStudios/tame-oauth/pull/40) added support for [`Metadata Server Auth`](https://cloud.google.com/compute/docs/instances/verifying-instance-identity) so that you can obtain oauth tokens when running inside GCP. Thanks [@boulos](https://github.com/boulos)!
 - [PR#42](https://github.com/EmbarkStudios/tame-oauth/pull/42) resolved [#39](https://github.com/EmbarkStudios/tame-oauth/issues/39) by adding support for the same default credentials flow as the the Go [oauth2](https://github.com/golang/oauth2/blob/f6687ab2804cbebdfdeef385bee94918b1ce83de/google/default.go#L111) implementation for Google oauth. This included adding support for `EndUserCredentials`. Thanks [@boulos](https://github.com/boulos)!
@@ -92,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.2...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.2...0.6.0
 [0.5.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.4.7...0.5.0
