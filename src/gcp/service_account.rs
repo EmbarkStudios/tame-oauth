@@ -16,7 +16,7 @@ pub struct ServiceAccountInfo {
     pub private_key: String,
     /// The unique id used as the issuer of the JWT claim
     pub client_email: String,
-    /// The URI we send the token requests to, eg https://oauth2.googleapis.com/token
+    /// The URI we send the token requests to, eg <https://oauth2.googleapis.com/token>
     pub token_uri: String,
 }
 
@@ -35,13 +35,13 @@ impl ServiceAccountInfo {
 }
 
 /// A token provider for a GCP service account.
-pub struct ServiceAccountAccess {
+pub struct ServiceAccountProvider {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
     cache: std::sync::Mutex<Vec<Entry>>,
 }
 
-impl ServiceAccountAccess {
+impl ServiceAccountProvider {
     /// Creates a new `ServiceAccountAccess` given the provided service
     /// account info. This can fail if the private key is encoded incorrectly.
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
@@ -94,8 +94,8 @@ impl ServiceAccountAccess {
     }
 }
 
-impl TokenProvider for ServiceAccountAccess {
-    /// Like [`ServiceAccountAccess::get_token`], but allows the JWT "subject"
+impl TokenProvider for ServiceAccountProvider {
+    /// Like [`ServiceAccountProvider::get_token`], but allows the JWT "subject"
     /// to be passed in.
     fn get_token_with_subject<'a, S, I, T>(
         &self,
@@ -239,12 +239,12 @@ mod test {
         };
 
         let (hash, scopes) =
-            ServiceAccountAccess::serialize_scopes(["scope1", "scope2", "scope3"].iter());
+            ServiceAccountProvider::serialize_scopes(["scope1", "scope2", "scope3"].iter());
 
         assert_eq!(expected, hash);
         assert_eq!("scope1 scope2 scope3", scopes);
 
-        let (hash, scopes) = ServiceAccountAccess::serialize_scopes(
+        let (hash, scopes) = ServiceAccountProvider::serialize_scopes(
             vec![
                 "scope1".to_owned(),
                 "scope2".to_owned(),

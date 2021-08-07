@@ -25,8 +25,10 @@ pub enum Error {
     InvalidRsaKeyRejected(ring::error::KeyRejected),
     /// A mutex has been poisoned due to a panic while a lock was held
     Poisoned,
+    /// An I/O error occurred when reading credentials
     #[cfg(feature = "gcp")]
     Io(std::io::Error),
+    /// Failed to load valid credentials from a file on disk
     #[cfg(feature = "gcp")]
     InvalidCredentials {
         file: std::path::PathBuf,

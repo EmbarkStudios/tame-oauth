@@ -1,10 +1,9 @@
-use crate::{
-    error::Error,
-    token::{Token, TokenOrRequest, TokenProvider},
-};
+//! Provides functionality for
+//! [Google oauth](https://developers.google.com/identity/protocols/oauth2)
+
+use crate::{error::Error, jwt};
 
 mod end_user;
-mod jwt;
 mod metadata_server;
 mod service_account;
 
@@ -12,23 +11,20 @@ use end_user as eu;
 use metadata_server as ms;
 use service_account as sa;
 
-pub mod prelude {
-    pub use super::{
-        eu::EndUserCredentials,
-        ms::MetadataServerProvider,
-        sa::{ServiceAccountAccess, ServiceAccountInfo},
-        TokenProviderWrapper,
-    };
-    pub use crate::token::{Token, TokenOrRequest, TokenProvider};
-}
+pub use crate::token::{Token, TokenOrRequest, TokenProvider};
+pub use {
+    eu::EndUserCredentials,
+    ms::MetadataServerProvider,
+    sa::{ServiceAccountInfo, ServiceAccountProvider},
+};
 
 struct Entry {
     hash: u64,
     token: Token,
 }
 
-/// Both the `ServiceAccountAccess` and `MetadataServerProvider` get
-/// back JSON responses with this schema from their endpoints.
+/// Both the [`ServiceAccountProvider`] and [`MetadataServerProvider`] get back
+/// JSON responses with this schema from their endpoints.
 #[derive(serde::Deserialize, Debug)]
 struct TokenResponse {
     /// The actual token
@@ -39,26 +35,27 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-/// Simple wrapper of our three GCP token providers.
+/// Wrapper around the different providers that are supported
 pub enum TokenProviderWrapper {
     EndUser(eu::EndUserCredentials),
     Metadata(ms::MetadataServerProvider),
-    ServiceAccount(sa::ServiceAccountAccess),
+    ServiceAccount(sa::ServiceAccountProvider),
 }
 
 impl TokenProviderWrapper {
     /// Get a `TokenProvider` following the "Google Default Credentials"
     /// flow, in order:
     ///
-    ///  * If the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is
-    ///    set. Use that as a path to a service account JSON file.
+    /// * If the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is
+    ///   set, use that as a path to a [`ServiceAccountInfo`](sa::ServiceAccountInfo).
     ///
-    ///  * Check for a gcloud config file (see `gcloud_config_file`) to
-    ///    get `EndUserCredentials`.
+    /// * Check for a gcloud's
+    /// [Application Default Credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
+    /// for [`EndUserCredentials`](eu::EndUserCredentials)
     ///
-    ///  * If we're running on GCP, use the local metadata server.
+    /// * If we're running on GCP, use the local metadata server.
     ///
-    ///  * Otherwise, return None.
+    /// * Otherwise, return None.
     ///
     /// If it appears that a method is being used, but is actually invalid,
     /// eg `GOOGLE_APPLICATION_CREDENTIALS` is set but the file doesn't exist or
@@ -90,9 +87,11 @@ impl TokenProviderWrapper {
             };
 
             return Ok(Some(TokenProviderWrapper::ServiceAccount(
-                sa::ServiceAccountAccess::new(sa_info).map_err(|e| Error::InvalidCredentials {
-                    file: cred_path.into(),
-                    error: Box::new(e),
+                sa::ServiceAccountProvider::new(sa_info).map_err(|e| {
+                    Error::InvalidCredentials {
+                        file: cred_path.into(),
+                        error: Box::new(e),
+                    }
                 })?,
             )));
         }
@@ -183,8 +182,6 @@ impl TokenProviderWrapper {
     }
 }
 
-/// Implement `TokenProvider` for `TokenProviderWrapper` so that clients don't
-/// have to do the dispatch themselves.
 impl TokenProvider for TokenProviderWrapper {
     fn get_token_with_subject<'a, S, I, T>(
         &self,

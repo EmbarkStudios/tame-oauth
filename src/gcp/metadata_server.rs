@@ -4,19 +4,16 @@ use crate::{
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
 };
 
+/// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
+/// using the metadata server accessible when running from within GCP
 pub struct MetadataServerProvider {
     account_name: String,
 }
 
 impl MetadataServerProvider {
     pub fn new(account_name: Option<String>) -> Self {
-        if let Some(name) = account_name {
-            Self { account_name: name }
-        } else {
-            // GCP uses "default" as the name in URIs.
-            Self {
-                account_name: "default".to_string(),
-            }
+        Self {
+            account_name: account_name.unwrap_or_else(|| "default".into()),
         }
     }
 }
@@ -43,8 +40,7 @@ impl TokenProvider for MetadataServerProvider {
         }
 
         // Regardless of GCE or GAE, the token_uri is
-        // computeMetadata/v1/instance/service-accounts/<name or
-        // id>/token.
+        // `computeMetadata/v1/instance/service-accounts/<name or id>/token`.
         let mut url = format!(
             "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/{}/token",
             self.account_name

@@ -4,7 +4,8 @@ use crate::{
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
 };
 
-/// The fields from a well formed `application_default_credentials.json`.
+/// Provides tokens using
+/// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct EndUserCredentials {
     /// The OAuth2 client_id
