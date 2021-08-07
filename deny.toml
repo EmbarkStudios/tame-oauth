@@ -17,12 +17,8 @@ deny = [
     { name = "openssl-sys" },
 ]
 skip = [
-    # most crates still reference the pre 1.0 version
-    { name = "cfg-if", version = "=0.1.10" },
 ]
 skip-tree = [
-    # hyper (via h2) uses an outdated version
-    { name = "pin-project", version = "=0.4.27" },
 ]
 
 [licenses]
@@ -39,7 +35,6 @@ exceptions = [
     { allow = ["ISC"], name = "webpki" },
     { allow = ["ISC", "MIT", "OpenSSL"], name = "ring" },
     { allow = ["Zlib"], name = "tinyvec" },
-    { allow = ["BSD-3-Clause"], name = "instant" },
 ]
 
 [[licenses.clarify]]
