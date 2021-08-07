@@ -5,11 +5,12 @@ on:
     tags:
       - "*"
   pull_request:
+
 name: CI
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -19,29 +20,18 @@ jobs:
 
       # make sure all code has been formatted with rustfmt
       - run: rustup component add rustfmt
-      - name: check rustfmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check --color always
+      - run: cargo fmt -- --check --color always
 
       # run clippy to verify we have no warnings
       - run: rustup component add clippy
-      - name: cargo fetch
-        uses: actions-rs/cargo@v1
-        with:
-          command: fetch
-      - name: cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-features --examples --tests -- -D warnings
+      - run: cargo fetch
+      - run: cargo clippy --all-features --all-targets -- -D warnings
 
   test:
     name: Test
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-20.04, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -49,64 +39,27 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - name: cargo fetch
-        uses: actions-rs/cargo@v1
-        with:
-          command: fetch
+      - run: cargo fetch
       - name: cargo test build
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --no-run
+        run: cargo test --all-features --no-run
       - name: cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
+        run: cargo test --all-features
 
   deny-check:
     name: cargo-deny check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: EmbarkStudios/cargo-deny-action@v1
 
   publish-check:
     name: Publish Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - name: cargo fetch
-        uses: actions-rs/cargo@v1
-        with:
-          command: fetch
-      - name: cargo publish
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --dry-run
-  # publish:
-  #   name: Publish
-  #   needs: [test, deny-check, publish-check]
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #   steps:
-  #     - uses: actions/checkout@v1
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         override: true
-  #     - name: cargo fetch
-  #       uses: actions-rs/cargo@v1
-  #       with:
-  #         command: fetch
-  #     - name: cargo publish
-  #       uses: actions-rs/cargo@v1
-  #       env:
-  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
-  #       with:
-  #         command: publish
+      - run: cargo fetch
+      - run: cargo publish --dry-run

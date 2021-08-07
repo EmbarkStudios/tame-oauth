@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Added
+- [PR#40](https://github.com/EmbarkStudios/tame-oauth/pull/40) added support for [`Metadata Server Auth`](https://cloud.google.com/compute/docs/instances/verifying-instance-identity) so that you can obtain oauth tokens when running inside GCP. Thanks [@boulos](https://github.com/boulos)!
+- [PR#42](https://github.com/EmbarkStudios/tame-oauth/pull/42) resolved [#39](https://github.com/EmbarkStudios/tame-oauth/issues/39) by adding support for the same default credentials flow as the the Go [oauth2](https://github.com/golang/oauth2/blob/f6687ab2804cbebdfdeef385bee94918b1ce83de/google/default.go#L111) implementation for Google oauth. This included adding support for `EndUserCredentials`. Thanks [@boulos](https://github.com/boulos)!
+
 ## [0.5.2] - 2021-06-18
 ### Added
 - [PR#38](https://github.com/EmbarkStudios/tame-oauth/pull/38) added `ServiceAccountAccess::get_token_with_subject` to allow control over the JWT `subject` field. Thanks [@fosskers](https://github.com/fosskers)!

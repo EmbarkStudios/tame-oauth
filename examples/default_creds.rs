@@ -1,32 +1,27 @@
 use tame_oauth::gcp::prelude::*;
 
-// This example shows the basics for creating a GCP service account token
-// provider and requesting a token from it. This particular example uses the
-// reqwest HTTP client, but the point of this crate is that you can use
-// whichever one you like as long as you don't mind doing a little bit of
-// boilerplate to convert between from http::Request and to http::Response
+// This example shows the basics for creating a token provider for the default
+// credentials on the system. If you want to use a service account, set
+// `GOOGLE_APPLICATION_CREDENTIALS` to a service account key path, if have
+// gcloud installed, you can just run this as is and it will work as long as
+// you have done `gcloud auth application-default login` previously, and that
+// token hasn't expired
 #[tokio::main]
 async fn main() {
-    let mut args = std::env::args().skip(1);
+    let scopes: Vec<_> = std::env::args().skip(1).collect();
 
-    let key_path = args
-        .next()
-        .expect("expected path to a service account json file");
-    let scopes: Vec<_> = args.collect();
-    let service_key = std::fs::read_to_string(key_path).expect("failed to read json key");
+    let provider = TokenProviderWrapper::get_default_provider()
+        .expect("unable to read default token provider")
+        .expect("unable to find default token provider");
 
-    // Deserialize the service account info from the json data
-    let acct_info = ServiceAccountInfo::deserialize(service_key).unwrap();
-
-    // Create the token provider...should probably rename this!
-    let acct_access = ServiceAccountAccess::new(acct_info).unwrap();
+    println!("Using {}", provider.kind());
 
     // Attempt to get a token, since we have never used this accessor
     // before, it's guaranteed that we will need to make an HTTPS
     // request to the token provider to retrieve a token. This
     // will also happen if we want to get a token for a different set
     // of scopes, or if the token has expired.
-    let token = match acct_access.get_token(&scopes).unwrap() {
+    match provider.get_token(&scopes).unwrap() {
         TokenOrRequest::Request {
             // This is an http::Request that we can use to build
             // a client request for whichever HTTP client implementation
@@ -74,31 +69,11 @@ async fn main() {
             let buffer = response.bytes().await.unwrap();
             let response = builder.body(buffer).unwrap();
 
-            // Tell our accesssor about the response, also passing
-            // the scope_hash for the scopes we initially requested,
-            // this will allow future token requests for those scopes
-            // to use a cached token, at least until it expires (~1 hour)
-            acct_access
+            provider
                 .parse_token_response(scope_hash, response)
-                .unwrap()
-        }
-        _ => unreachable!(),
-    };
+                .expect("invalid token response");
 
-    // Uncomment this if you want to go to lunch and see an unreachable panic
-    // when you get back
-    // std::thread::sleep(std::time::Duration::from_secs(60 * 60))
-
-    // Retrieving a token for the same scopes for which a token has been acquired
-    // will use the cached token until it expires
-    match acct_access.get_token(&scopes).unwrap() {
-        TokenOrRequest::Token(tk) => {
-            assert_eq!(tk, token);
-            println!(
-                "cool, you were able to retrieve a token for the {:?} scope{}!",
-                scopes,
-                if scopes.len() == 1 { "" } else { "s" }
-            );
+            println!("cool, we were able to receive a token!");
         }
         _ => unreachable!(),
     }
