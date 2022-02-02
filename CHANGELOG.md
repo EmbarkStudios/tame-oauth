@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.7.0] - 2022-02-02
 ### Changed
 - [PR#47](https://github.com/EmbarkStudios/tame-oauth/pull/47) removed the dependency upon `chrono` as it was overkill and brought in multiple security advisories and is only lightly maintained.
 
@@ -98,7 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.7.0...HEAD
+[0.7.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.2...0.6.0
 [0.5.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.5.0...0.5.1
