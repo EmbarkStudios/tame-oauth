@@ -1,4 +1,6 @@
-# 🔐 tame-oauth
+<div align="center">
+
+# `🔐 tame-oauth`
 
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.games)
 [![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
@@ -8,6 +10,8 @@
 [![Build status](https://github.com/gleam-lang/gleam/workflows/ci/badge.svg?branch=main)](https://github.com/EmbarkStudios/tame-oauth/actions)
 
 `tame-oauth` is a small oauth crate that follows the [sans-io](https://sans-io.readthedocs.io/) approach.
+
+</div>
 
 ## Why?
 
@@ -22,7 +26,7 @@
 ## Features
 
 * `gcp` (default) - Support for [GCP oauth2](https://developers.google.com/identity/protocols/oauth2)
-* `wasm-web` - Enables wasm features in `chrono` and `ring` needed for `tame-oauth` to be used in a wasm browser context. Note this feature should not be used when targetting wasm outside the browser context, in which case you would likely need to target `wasm32-wasi`.
+* `wasm-web` - Enables wasm features in `ring` needed for `tame-oauth` to be used in a wasm browser context. Note this feature should not be used when targeting wasm outside the browser context, in which case you would likely need to target `wasm32-wasi`.
 * `jwt` (default) - Support for [JSON Web Tokens](https://jwt.io/), required for `gcp`
 * `url` (default) - Url parsing, required for `gcp`
 

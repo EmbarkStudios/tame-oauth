@@ -1,3 +1,5 @@
+<!-- markdownlint-disable blanks-around-headings blanks-around-lists no-duplicate-heading -->
+
 # Changelog
 All notable changes to this project will be documented in this file.
 
@@ -6,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- [PR#47](https://github.com/EmbarkStudios/tame-oauth/pull/47) removed the dependency upon `chrono` as it was overkill and brought in multiple security advisories and is only lightly maintained.
+
 ## [0.6.0] - 2021-08-07
 ### Added
 - [PR#40](https://github.com/EmbarkStudios/tame-oauth/pull/40) added support for [`Metadata Server Auth`](https://cloud.google.com/compute/docs/instances/verifying-instance-identity) so that you can obtain oauth tokens when running inside GCP. Thanks [@boulos](https://github.com/boulos)!
@@ -17,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1] - 2021-06-05
 ### Removed
-- Removed unused depdendency on `lock_api`, which was lingering after [PR#21](https://github.com/EmbarkStudios/tame-oauth/pull/21).
+- Removed unused dependency on `lock_api`, which was lingering after [PR#21](https://github.com/EmbarkStudios/tame-oauth/pull/21).
 
 ## [0.5.0] - 2021-06-05
 ### Added

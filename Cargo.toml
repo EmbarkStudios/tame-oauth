@@ -1,7 +1,10 @@
 [package]
 name = "tame-oauth"
 version = "0.6.0"
-authors = ["Embark <opensource@embark-studios.com>", "Jake Shadle <jake.shadle@embark-studios.com>"]
+authors = [
+    "Embark <opensource@embark-studios.com>",
+    "Jake Shadle <jake.shadle@embark-studios.com>",
+]
 edition = "2018"
 description = "A (very) simple oauth 2.0 library"
 license = "MIT OR Apache-2.0"
@@ -9,6 +12,7 @@ documentation = "https://docs.rs/tame-oauth"
 homepage = "https://github.com/EmbarkStudios/tame-oauth"
 repository = "https://github.com/EmbarkStudios/tame-oauth"
 keywords = ["oauth", "tame", "sans-io", "gcp"]
+categories = ["authentication"]
 readme = "README.md"
 
 [badges]
@@ -29,14 +33,14 @@ jwt = ["ring"]
 # This enables features in chrono and ring that are necessary to use this library
 # in a wasm32 web (browser) context. If you are using wasm outside the browser
 # you will need to target wasm32-wasi for the requisite functionality (time and random)
-wasm-web = ["chrono/wasmbind", "ring/wasm32_c"]
+wasm-web = ["ring/wasm32_c"]
 
 [dependencies]
-base64 = "0.13" # Keep aligned with rustls
-chrono = "0.4"
+# Keep aligned with rustls
+base64 = "0.13"
 http = "0.2"
 ring = { version = "0.16", optional = true }
-serde = { version = "1.0", features = [ "derive" ] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 twox-hash = { version = "1.5.0", default-features = false }
 url = { version = "2.2", optional = true }
