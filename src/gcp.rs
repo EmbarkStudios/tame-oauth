@@ -218,14 +218,13 @@ impl TokenProvider for TokenProviderWrapper {
 
 impl From<TokenResponse> for Token {
     fn from(tr: TokenResponse) -> Self {
-        let expires_ts = chrono::Utc::now().timestamp() + tr.expires_in;
-
         Self {
             access_token: tr.access_token,
             token_type: tr.token_type,
             refresh_token: String::new(),
             expires_in: Some(tr.expires_in),
-            expires_in_timestamp: Some(expires_ts),
+            expires_in_timestamp: std::time::SystemTime::now()
+                .checked_add(std::time::Duration::from_secs(tr.expires_in as u64)),
         }
     }
 }

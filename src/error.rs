@@ -34,6 +34,8 @@ pub enum Error {
         file: std::path::PathBuf,
         error: Box<Error>,
     },
+    /// An error occured due to [`SystemTime`](std::time::SystemTime)
+    SystemTime(std::time::SystemTimeError),
 }
 
 impl fmt::Display for Error {
@@ -60,31 +62,24 @@ impl fmt::Display for Error {
             InvalidCredentials { file, error } => {
                 write!(f, "Invalid credentials in '{}': {}", file.display(), error)
             }
+            SystemTime(te) => {
+                write!(f, "System Time error: {}", te)
+            }
         }
     }
 }
 
 impl std::error::Error for Error {
-    fn cause(&self) -> Option<&dyn Err> {
-        use Error::{Auth, Base64Decode, Http, Json};
-
-        match self {
-            Base64Decode(err) => Some(err as &dyn Err),
-            Http(err) => Some(err as &dyn Err),
-            Json(err) => Some(err as &dyn Err),
-            Auth(err) => Some(err as &dyn Err),
-            _ => None,
-        }
-    }
-
     fn source(&self) -> Option<&(dyn Err + 'static)> {
-        use Error::{Auth, Base64Decode, Http, Json};
+        #![allow(clippy::enum_glob_use)]
+        use Error::*;
 
         match self {
             Base64Decode(err) => Some(err as &dyn Err),
             Http(err) => Some(err as &dyn Err),
             Json(err) => Some(err as &dyn Err),
             Auth(err) => Some(err as &dyn Err),
+            SystemTime(err) => Some(err as &dyn Err),
             _ => None,
         }
     }
@@ -105,6 +100,12 @@ impl From<http::Error> for Error {
 impl From<serde_json::Error> for Error {
     fn from(e: serde_json::Error) -> Self {
         Error::Json(e)
+    }
+}
+
+impl From<std::time::SystemTimeError> for Error {
+    fn from(e: std::time::SystemTimeError) -> Self {
+        Error::SystemTime(e)
     }
 }
 

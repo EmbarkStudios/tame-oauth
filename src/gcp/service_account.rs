@@ -125,15 +125,16 @@ impl TokenProvider for ServiceAccountProvider {
             }
         };
 
-        let issued = chrono::Utc::now().timestamp();
-        let expiry = issued + 3600 - 5; // Give us some wiggle room near the hour mark
+        let issued_at = std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)?
+            .as_secs() as i64;
 
         let claims = jwt::Claims {
             issuer: self.info.client_email.clone(),
             scope: scopes,
             audience: self.info.token_uri.clone(),
-            expiration: expiry,
-            issued_at: issued,
+            expiration: issued_at + 3600 - 5, // Give us some wiggle room near the hour mark
+            issued_at,
             subject: subject.map(|s| s.into()),
         };
 
