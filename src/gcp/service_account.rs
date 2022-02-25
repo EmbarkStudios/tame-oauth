@@ -47,7 +47,7 @@ impl ServiceAccountProvider {
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
         let key_string = info
             .private_key
-            .splitn(5, "-----")
+            .split("-----")
             .nth(2)
             .ok_or(Error::InvalidKeyFormat)?;
 
