@@ -51,7 +51,7 @@ impl TokenCache {
         // Last token wins, which...should?...be fine
         let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
         match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
-            Ok(i) => cache[i].token = token.clone(),
+            Ok(i) => cache[i].token = token,
             Err(i) => {
                 cache.insert(i, Entry { hash, token });
             }
@@ -129,7 +129,7 @@ where
     let scopes_str = scopes
         .clone()
         .into_iter()
-        .map(|s| s.clone().as_ref())
+        .map(|s| s.as_ref())
         .collect::<Vec<_>>()
         .join("|");
 
