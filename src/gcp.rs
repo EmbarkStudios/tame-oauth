@@ -127,13 +127,15 @@ impl TokenProviderWrapper {
         if let Some(gcloud_file) = gcloud_config_file() {
             match read_to_string(&gcloud_file) {
                 Ok(json_data) => {
-                    let end_user_credentials = eu::EndUserCredentials::deserialize(json_data)
+                    let end_user_credentials = eu::EndUserCredentialsInfo::deserialize(json_data)
                         .map_err(|e| Error::InvalidCredentials {
-                            file: gcloud_file,
-                            error: Box::new(e),
-                        })?;
+                        file: gcloud_file,
+                        error: Box::new(e),
+                    })?;
 
-                    return Ok(Some(TokenProviderWrapper::EndUser(end_user_credentials)));
+                    return Ok(Some(TokenProviderWrapper::EndUser(
+                        eu::EndUserCredentials::new(end_user_credentials),
+                    )));
                 }
                 // Skip not found errors, and fall back to the metadata server check
                 Err(nf) if nf.kind() == std::io::ErrorKind::NotFound => {}
