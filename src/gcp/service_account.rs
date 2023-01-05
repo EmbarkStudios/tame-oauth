@@ -5,6 +5,7 @@ use super::{
 use crate::{
     error::{self, Error},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
+    token_cache::CachedTokenProvider,
 };
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -34,13 +35,23 @@ impl ServiceAccountInfo {
     }
 }
 
+/// A token provider for a GCP service account that caches the tokens.
+pub type ServiceAccountProvider = CachedTokenProvider<ServiceAccountProviderInner>;
+impl ServiceAccountProvider {
+    pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
+        Ok(CachedTokenProvider::wrap(ServiceAccountProviderInner::new(
+            info,
+        )?))
+    }
+}
+
 /// A token provider for a GCP service account.
-pub struct ServiceAccountProvider {
+pub struct ServiceAccountProviderInner {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
 }
 
-impl ServiceAccountProvider {
+impl ServiceAccountProviderInner {
     /// Creates a new `ServiceAccountAccess` given the provided service
     /// account info. This can fail if the private key is encoded incorrectly.
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {
@@ -73,8 +84,8 @@ impl ServiceAccountProvider {
     }
 }
 
-impl TokenProvider for ServiceAccountProvider {
-    /// Like [`ServiceAccountProvider::get_token`], but allows the JWT "subject"
+impl TokenProvider for ServiceAccountProviderInner {
+    /// Like [`ServiceAccountProviderInner::get_token`], but allows the JWT "subject"
     /// to be passed in.
     fn get_token_with_subject<'a, S, I, T>(
         &self,

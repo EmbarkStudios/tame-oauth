@@ -2,12 +2,28 @@ use super::TokenResponse;
 use crate::{
     error::{self, Error},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
+    token_cache::CachedTokenProvider,
 };
 
 /// Provides tokens using
 /// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
+/// Caches token internally.
+pub type EndUserCredentials = CachedTokenProvider<EndUserCredentialsInner>;
+impl EndUserCredentials {
+    pub fn deserialize<T>(key_data: T) -> Result<Self, Error>
+    where
+        T: AsRef<[u8]>,
+    {
+        Ok(CachedTokenProvider::wrap(
+            EndUserCredentialsInner::deserialize(key_data)?,
+        ))
+    }
+}
+
+/// Provides tokens using
+/// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
 #[derive(serde::Deserialize, Debug, Clone)]
-pub struct EndUserCredentials {
+pub struct EndUserCredentialsInner {
     /// The OAuth2 client_id
     pub client_id: String,
     /// The OAuth2 client_secret
@@ -19,7 +35,7 @@ pub struct EndUserCredentials {
     pub client_type: String,
 }
 
-impl EndUserCredentials {
+impl EndUserCredentialsInner {
     /// Deserializes the `EndUserCredentials` from a byte slice. This
     /// data is typically acquired by reading an
     /// `application_default_credentials.json` file from disk.
@@ -34,7 +50,7 @@ impl EndUserCredentials {
     }
 }
 
-impl TokenProvider for EndUserCredentials {
+impl TokenProvider for EndUserCredentialsInner {
     fn get_token_with_subject<'a, S, I, T>(
         &self,
         subject: Option<T>,
@@ -128,7 +144,7 @@ mod test {
 
     #[test]
     fn end_user_credentials() {
-        let provider = EndUserCredentials {
+        let provider = EndUserCredentialsInner {
             client_id: "fake_client@domain.com".into(),
             client_secret: "TOP_SECRET".into(),
             refresh_token: "REFRESH_TOKEN".into(),
