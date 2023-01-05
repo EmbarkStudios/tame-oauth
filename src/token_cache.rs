@@ -11,7 +11,7 @@ struct Entry {
     token: Token,
 }
 
-pub(crate) struct TokenCache {
+pub struct TokenCache {
     cache: Mutex<Vec<Entry>>,
 }
 
@@ -61,13 +61,13 @@ impl TokenCache {
     }
 }
 
-struct CachedTokenProvider<P> {
+pub struct CachedTokenProvider<P> {
     cache: TokenCache,
     inner: P,
 }
 
 impl<P> CachedTokenProvider<P> {
-    pub fn new(token_provider: P) -> Self {
+    pub fn wrap(token_provider: P) -> Self {
         Self {
             cache: TokenCache::new(),
             inner: token_provider,
@@ -89,22 +89,7 @@ where
         I: IntoIterator<Item = &'a S> + Clone,
         T: Into<String>,
     {
-        let hash = {
-            let scopes_str = scopes
-                .clone()
-                .into_iter()
-                .map(|s| s.clone().as_ref())
-                .collect::<Vec<_>>()
-                .join("|");
-
-            let hash = {
-                let mut hasher = twox_hash::XxHash::default();
-                hasher.write(scopes_str.as_bytes());
-                hasher.finish()
-            };
-
-            hash
-        };
+        let hash = hash_scopes(&scopes);
 
         let reason = match self.cache.get(hash)? {
             TokenOrRequestReason::Token(token) => return Ok(TokenOrRequest::Token(token)),
@@ -133,5 +118,59 @@ where
 
         self.cache.insert(token.clone(), hash)?;
         Ok(token)
+    }
+}
+
+fn hash_scopes<'a, I, S>(scopes: &I) -> Hash
+where
+    S: AsRef<str> + 'a,
+    I: IntoIterator<Item = &'a S> + Clone,
+{
+    let scopes_str = scopes
+        .clone()
+        .into_iter()
+        .map(|s| s.clone().as_ref())
+        .collect::<Vec<_>>()
+        .join("|");
+
+    let hash = {
+        let mut hasher = twox_hash::XxHash::default();
+        hasher.write(scopes_str.as_bytes());
+        hasher.finish()
+    };
+
+    hash
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn hash_scopes_test() {
+        use std::hash::Hasher;
+
+        let expected = {
+            let mut hasher = twox_hash::XxHash::default();
+            hasher.write(b"scope1|");
+            hasher.write(b"scope2|");
+            hasher.write(b"scope3");
+            hasher.finish()
+        };
+
+        let hash = hash_scopes(&["scope1", "scope2", "scope3"].iter());
+
+        assert_eq!(expected, hash);
+
+        let hash = hash_scopes(
+            &vec![
+                "scope1".to_owned(),
+                "scope2".to_owned(),
+                "scope3".to_owned(),
+            ]
+            .iter(),
+        );
+
+        assert_eq!(expected, hash);
     }
 }
