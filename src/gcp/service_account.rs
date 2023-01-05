@@ -1,6 +1,6 @@
 use super::{
     jwt::{self, Algorithm, Header, Key},
-    Entry, TokenResponse,
+    TokenResponse,
 };
 use crate::{
     error::{self, Error},
@@ -38,7 +38,6 @@ impl ServiceAccountInfo {
 pub struct ServiceAccountProvider {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
-    cache: std::sync::Mutex<Vec<Entry>>,
 }
 
 impl ServiceAccountProvider {
@@ -64,7 +63,6 @@ impl ServiceAccountProvider {
 
         Ok(Self {
             info,
-            cache: std::sync::Mutex::new(Vec::new()),
             priv_key: key_bytes,
         })
     }
@@ -72,25 +70,6 @@ impl ServiceAccountProvider {
     /// Gets the [`ServiceAccountInfo`] this was created for
     pub fn get_account_info(&self) -> &ServiceAccountInfo {
         &self.info
-    }
-
-    /// Hashes a set of scopes to a numeric key we can use to have an in-memory
-    /// cache of scopes -> token
-    fn serialize_scopes<'a, I, S>(scopes: I) -> (u64, String)
-    where
-        S: AsRef<str> + 'a,
-        I: Iterator<Item = &'a S>,
-    {
-        use std::hash::Hasher;
-
-        let scopes = scopes.map(|s| s.as_ref()).collect::<Vec<_>>().join(" ");
-        let hash = {
-            let mut hasher = twox_hash::XxHash::default();
-            hasher.write(scopes.as_bytes());
-            hasher.finish()
-        };
-
-        (hash, scopes)
     }
 }
 
@@ -107,23 +86,11 @@ impl TokenProvider for ServiceAccountProvider {
         I: IntoIterator<Item = &'a S>,
         T: Into<String>,
     {
-        let (hash, scopes) = Self::serialize_scopes(scopes.into_iter());
-
-        let reason = {
-            let cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
-            match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
-                Ok(i) => {
-                    let token = &cache[i].token;
-
-                    if !token.has_expired() {
-                        return Ok(TokenOrRequest::Token(token.clone()));
-                    }
-
-                    RequestReason::Expired
-                }
-                Err(_) => RequestReason::ScopesChanged,
-            }
-        };
+        let scopes = scopes
+            .into_iter()
+            .map(|s| s.as_ref())
+            .collect::<Vec<_>>()
+            .join(" ");
 
         let issued_at = std::time::SystemTime::now()
             .duration_since(std::time::SystemTime::UNIX_EPOCH)?
@@ -162,9 +129,9 @@ impl TokenProvider for ServiceAccountProvider {
             .body(body)?;
 
         Ok(TokenOrRequest::Request {
-            reason,
+            reason: RequestReason::ScopesChanged,
             request,
-            scope_hash: hash,
+            scope_hash: 0,
         })
     }
 
@@ -174,7 +141,7 @@ impl TokenProvider for ServiceAccountProvider {
     /// same scopes don't require new http requests.
     fn parse_token_response<S>(
         &self,
-        hash: u64,
+        _hash: u64,
         response: http::Response<S>,
     ) -> Result<Token, Error>
     where
@@ -202,59 +169,6 @@ impl TokenProvider for ServiceAccountProvider {
         let token_res: TokenResponse = serde_json::from_slice(body.as_ref())?;
         let token: Token = token_res.into();
 
-        // Last token wins, which...should?...be fine
-        {
-            let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
-            match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
-                Ok(i) => cache[i].token = token.clone(),
-                Err(i) => {
-                    cache.insert(
-                        i,
-                        Entry {
-                            hash,
-                            token: token.clone(),
-                        },
-                    );
-                }
-            };
-        }
-
         Ok(token)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn hash_scopes() {
-        use std::hash::Hasher;
-
-        let expected = {
-            let mut hasher = twox_hash::XxHash::default();
-            hasher.write(b"scope1 ");
-            hasher.write(b"scope2 ");
-            hasher.write(b"scope3");
-            hasher.finish()
-        };
-
-        let (hash, scopes) =
-            ServiceAccountProvider::serialize_scopes(["scope1", "scope2", "scope3"].iter());
-
-        assert_eq!(expected, hash);
-        assert_eq!("scope1 scope2 scope3", scopes);
-
-        let (hash, scopes) = ServiceAccountProvider::serialize_scopes(
-            vec![
-                "scope1".to_owned(),
-                "scope2".to_owned(),
-                "scope3".to_owned(),
-            ]
-            .iter(),
-        );
-
-        assert_eq!(expected, hash);
-        assert_eq!("scope1 scope2 scope3", scopes);
     }
 }

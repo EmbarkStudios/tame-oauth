@@ -18,11 +18,6 @@ pub use {
     sa::{ServiceAccountInfo, ServiceAccountProvider},
 };
 
-struct Entry {
-    hash: u64,
-    token: Token,
-}
-
 /// Both the [`ServiceAccountProvider`] and [`MetadataServerProvider`] get back
 /// JSON responses with this schema from their endpoints.
 #[derive(serde::Deserialize, Debug)]
@@ -190,7 +185,7 @@ impl TokenProvider for TokenProviderWrapper {
     ) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: IntoIterator<Item = &'a S> + Clone,
         T: Into<String>,
     {
         match self {

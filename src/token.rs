@@ -80,7 +80,7 @@ pub trait TokenProvider {
     fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: IntoIterator<Item = &'a S> + Clone,
     {
         self.get_token_with_subject::<S, I, String>(None, scopes)
     }
@@ -95,7 +95,7 @@ pub trait TokenProvider {
     ) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: IntoIterator<Item = &'a S> + Clone,
         T: Into<String>;
 
     /// Once a response has been received for a token request, call this method
