@@ -7,7 +7,7 @@ use crate::{
 
 /// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
 /// using the metadata server accessible when running from within GCP.
-/// Internally caching the tokens.
+/// Caches tokens internally.
 pub type MetadataServerProvider = CachedTokenProvider<MetadataServerProviderInner>;
 impl MetadataServerProvider {
     pub fn new(account_name: Option<String>) -> Self {

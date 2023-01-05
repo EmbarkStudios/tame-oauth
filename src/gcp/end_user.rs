@@ -7,7 +7,7 @@ use crate::{
 
 /// Provides tokens using
 /// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
-/// Caches token internally.
+/// Caches tokens internally.
 pub type EndUserCredentials = CachedTokenProvider<EndUserCredentialsInner>;
 impl EndUserCredentials {
     pub fn deserialize<T>(key_data: T) -> Result<Self, Error>

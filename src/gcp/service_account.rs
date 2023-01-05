@@ -35,7 +35,8 @@ impl ServiceAccountInfo {
     }
 }
 
-/// A token provider for a GCP service account that caches the tokens.
+/// A token provider for a GCP service account.
+/// Caches tokens internally.
 pub type ServiceAccountProvider = CachedTokenProvider<ServiceAccountProviderInner>;
 impl ServiceAccountProvider {
     pub fn new(info: ServiceAccountInfo) -> Result<Self, Error> {

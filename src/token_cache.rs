@@ -11,6 +11,7 @@ struct Entry {
     token: Token,
 }
 
+/// An in-memory cache for caching tokens.
 pub struct TokenCache {
     cache: Mutex<Vec<Entry>>,
 }
@@ -27,6 +28,7 @@ impl TokenCache {
         }
     }
 
+    /// Get a token from the cache that matches the hash
     pub fn get(&self, hash: Hash) -> Result<TokenOrRequestReason, Error> {
         let reason = {
             let cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
@@ -47,6 +49,7 @@ impl TokenCache {
         Ok(TokenOrRequestReason::RequestReason(reason))
     }
 
+    /// Insert a token into the cache
     pub fn insert(&self, token: Token, hash: Hash) -> Result<(), Error> {
         // Last token wins, which...should?...be fine
         let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
@@ -61,6 +64,8 @@ impl TokenCache {
     }
 }
 
+/// Wraps a `TokenProvider` in a cache, only invokes the inner `TokenProvider` if
+/// the token in cache is expired, or if it doesn't exsist.
 pub struct CachedTokenProvider<P> {
     cache: TokenCache,
     inner: P,
