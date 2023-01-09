@@ -86,5 +86,6 @@ mod jwt;
 
 mod error;
 mod token;
+mod token_cache;
 
 pub use crate::{error::Error, token::Token};

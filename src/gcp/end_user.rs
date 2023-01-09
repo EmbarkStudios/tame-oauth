@@ -2,12 +2,23 @@ use super::TokenResponse;
 use crate::{
     error::{self, Error},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
+    token_cache::CachedTokenProvider,
 };
 
 /// Provides tokens using
 /// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
+/// Caches tokens internally.
+pub type EndUserCredentials = CachedTokenProvider<EndUserCredentialsInner>;
+impl EndUserCredentials {
+    pub fn new(info: EndUserCredentialsInfo) -> Self {
+        CachedTokenProvider::wrap(EndUserCredentialsInner::new(info))
+    }
+}
+
+/// Provides tokens using
+/// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
 #[derive(serde::Deserialize, Debug, Clone)]
-pub struct EndUserCredentials {
+pub struct EndUserCredentialsInfo {
     /// The OAuth2 client_id
     pub client_id: String,
     /// The OAuth2 client_secret
@@ -19,7 +30,7 @@ pub struct EndUserCredentials {
     pub client_type: String,
 }
 
-impl EndUserCredentials {
+impl EndUserCredentialsInfo {
     /// Deserializes the `EndUserCredentials` from a byte slice. This
     /// data is typically acquired by reading an
     /// `application_default_credentials.json` file from disk.
@@ -34,7 +45,17 @@ impl EndUserCredentials {
     }
 }
 
-impl TokenProvider for EndUserCredentials {
+pub struct EndUserCredentialsInner {
+    info: EndUserCredentialsInfo,
+}
+
+impl EndUserCredentialsInner {
+    pub fn new(info: EndUserCredentialsInfo) -> Self {
+        Self { info }
+    }
+}
+
+impl TokenProvider for EndUserCredentialsInner {
     fn get_token_with_subject<'a, S, I, T>(
         &self,
         subject: Option<T>,
@@ -70,10 +91,10 @@ impl TokenProvider for EndUserCredentials {
 
         // Build up the parameters as a form encoded string.
         let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("client_id", &self.client_id)
-            .append_pair("client_secret", &self.client_secret)
+            .append_pair("client_id", &self.info.client_id)
+            .append_pair("client_secret", &self.info.client_secret)
             .append_pair("grant_type", "refresh_token")
-            .append_pair("refresh_token", &self.refresh_token)
+            .append_pair("refresh_token", &self.info.refresh_token)
             .finish();
 
         let body = Vec::from(body);
@@ -128,12 +149,12 @@ mod test {
 
     #[test]
     fn end_user_credentials() {
-        let provider = EndUserCredentials {
+        let provider = EndUserCredentialsInner::new(EndUserCredentialsInfo {
             client_id: "fake_client@domain.com".into(),
             client_secret: "TOP_SECRET".into(),
             refresh_token: "REFRESH_TOKEN".into(),
             client_type: "authorized_user".into(),
-        };
+        });
 
         // End-user credentials don't let you override scopes.
         let scopes = vec!["better_not_be_there"];

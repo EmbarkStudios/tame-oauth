@@ -19,7 +19,7 @@ pub(crate) struct Claims {
 
 /// A basic JWT header, the alg defaults to HS256 and typ is automatically
 /// set to `JWT`. All the other fields are optional.
-#[derive(Debug, Clone, PartialEq, Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, serde::Deserialize)]
 pub struct Header {
     /// The type of JWS: it can only be "JWT" here
     ///
@@ -80,7 +80,7 @@ impl Default for Header {
 }
 
 /// The algorithms supported for signing/verifying
-#[derive(Debug, PartialEq, Copy, Clone, Serialize, serde::Deserialize)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize, serde::Deserialize)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Algorithm {
     /// HMAC using SHA-256
@@ -177,7 +177,7 @@ pub fn encode<T: Serialize>(header: &Header, claims: &T, key: Key<'_>) -> Result
     let encoded_header = to_jwt_part(&header)?;
     let encoded_claims = to_jwt_part(&claims)?;
     let signing_input = [encoded_header.as_ref(), encoded_claims.as_ref()].join(".");
-    let signature = sign(&*signing_input, key, header.alg)?;
+    let signature = sign(&signing_input, key, header.alg)?;
 
     Ok([signing_input, signature].join("."))
 }

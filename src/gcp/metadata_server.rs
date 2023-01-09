@@ -2,15 +2,26 @@ use super::TokenResponse;
 use crate::{
     error::{self, Error},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
+    token_cache::CachedTokenProvider,
 };
 
 /// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
+/// using the metadata server accessible when running from within GCP.
+/// Caches tokens internally.
+pub type MetadataServerProvider = CachedTokenProvider<MetadataServerProviderInner>;
+impl MetadataServerProvider {
+    pub fn new(account_name: Option<String>) -> Self {
+        CachedTokenProvider::wrap(MetadataServerProviderInner::new(account_name))
+    }
+}
+
+/// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
 /// using the metadata server accessible when running from within GCP
-pub struct MetadataServerProvider {
+pub struct MetadataServerProviderInner {
     account_name: String,
 }
 
-impl MetadataServerProvider {
+impl MetadataServerProviderInner {
     pub fn new(account_name: Option<String>) -> Self {
         Self {
             account_name: account_name.unwrap_or_else(|| "default".into()),
@@ -18,7 +29,7 @@ impl MetadataServerProvider {
     }
 }
 
-impl TokenProvider for MetadataServerProvider {
+impl TokenProvider for MetadataServerProviderInner {
     fn get_token_with_subject<'a, S, I, T>(
         &self,
         subject: Option<T>,

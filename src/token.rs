@@ -11,7 +11,7 @@ use std::time::SystemTime;
 /// replies, as well as for serialization for later reuse. This is the reason
 /// for the two fields dealing with expiry - once in relative in and once in
 /// absolute terms.
-#[derive(Clone, PartialEq, Debug, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Debug, serde::Deserialize)]
 pub struct Token {
     /// used when authenticating calls to oauth2 enabled services.
     pub access_token: String,
@@ -80,7 +80,7 @@ pub trait TokenProvider {
     fn get_token<'a, S, I>(&self, scopes: I) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: IntoIterator<Item = &'a S> + Clone,
     {
         self.get_token_with_subject::<S, I, String>(None, scopes)
     }
@@ -95,7 +95,7 @@ pub trait TokenProvider {
     ) -> Result<TokenOrRequest, Error>
     where
         S: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a S>,
+        I: IntoIterator<Item = &'a S> + Clone,
         T: Into<String>;
 
     /// Once a response has been received for a token request, call this method

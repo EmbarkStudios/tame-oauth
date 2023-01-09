@@ -15,10 +15,7 @@ deny = [
     { name = "openssl" },
     { name = "openssl-sys" },
 ]
-skip = [
-    # hyper uses this old version
-    { name = "itoa", version = "=0.4.8" },
-]
+skip = []
 skip-tree = []
 
 [licenses]
@@ -29,6 +26,7 @@ allow = [
     "Apache-2.0",
     "MIT",
     "BSD-3-Clause",
+    "Unicode-DFS-2016",
 ]
 exceptions = [
     { allow = ["MPL-2.0"], name = "webpki-roots" },
