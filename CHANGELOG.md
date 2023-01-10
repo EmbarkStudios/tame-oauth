@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Fixed
+- [PR#54](https://github.com/EmbarkStudios/tame-oauth/pull/54) re-adds `get_account_info` to the outer `ServiceAccountProvider` implementation. It was accidentally removed in #51.
+
 ## [0.8.0] - 2023-01-10
 ### Changed
 - [PR#51](https://github.com/EmbarkStudios/tame-oauth/pull/51) moved the token cache out of `ServiceAccountProvider` into a public type, and added a cached token provider that can wrap any other token provider. This wrapper now wrapps all the current gcp token providers, making them cached by default.

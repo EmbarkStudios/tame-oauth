@@ -15,7 +15,10 @@ deny = [
     { name = "openssl" },
     { name = "openssl-sys" },
 ]
-skip = []
+skip = [
+    # reqwest uses old dependency (dev dependency)
+    { name = "base64", version = "=0.13.1" }
+]
 skip-tree = []
 
 [licenses]

@@ -44,6 +44,11 @@ impl ServiceAccountProvider {
             info,
         )?))
     }
+
+    /// Gets the [`ServiceAccountInfo`] this was created for
+    pub fn get_account_info(&self) -> &ServiceAccountInfo {
+        &self.inner().info
+    }
 }
 
 /// A token provider for a GCP service account.

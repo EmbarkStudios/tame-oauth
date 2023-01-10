@@ -72,11 +72,17 @@ pub struct CachedTokenProvider<P> {
 }
 
 impl<P> CachedTokenProvider<P> {
+    /// Wraps a token provider with a cache
     pub fn wrap(token_provider: P) -> Self {
         Self {
             cache: TokenCache::new(),
             inner: token_provider,
         }
+    }
+
+    /// Gets a reference to the wrapped token provider
+    pub fn inner(&self) -> &P {
+        &self.inner
     }
 }
 
