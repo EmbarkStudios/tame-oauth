@@ -149,10 +149,16 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::{
+        ops::Add,
+        ops::Sub,
+        time::{Duration, SystemTime},
+    };
+
     use super::*;
 
     #[test]
-    fn hash_scopes_test() {
+    fn test_hash_scopes() {
         use std::hash::Hasher;
 
         let expected = {
@@ -177,5 +183,92 @@ mod test {
         );
 
         assert_eq!(expected, hash);
+    }
+
+    #[test]
+    fn test_cache() {
+        let cache = TokenCache::new();
+        let hash = hash_scopes(&["scope1", "scope2"].iter());
+        let token = mock_token(100);
+        let expired_token = mock_token(-100);
+
+        assert!(matches!(
+            cache.get(hash).unwrap(),
+            TokenOrRequestReason::RequestReason(RequestReason::ScopesChanged)
+        ));
+
+        cache.insert(expired_token, hash).unwrap();
+
+        assert!(matches!(
+            cache.get(hash).unwrap(),
+            TokenOrRequestReason::RequestReason(RequestReason::Expired)
+        ));
+
+        cache.insert(token, hash).unwrap();
+
+        assert!(matches!(
+            cache.get(hash).unwrap(),
+            TokenOrRequestReason::Token(..)
+        ));
+    }
+
+    #[test]
+    fn test_cache_wrapper() {
+        let cached_provider = CachedTokenProvider::wrap(PanicProvider);
+
+        let hash = hash_scopes(&["scope1", "scope2"].iter());
+        let token = mock_token(100);
+
+        cached_provider.cache.insert(token, hash).unwrap();
+
+        let tor = cached_provider.get_token(&["scope1", "scope2"]).unwrap();
+
+        // check that a token in returned
+        assert!(matches!(tor, TokenOrRequest::Token(..)));
+    }
+
+    fn mock_token(expires_in: i64) -> Token {
+        let expires_in_timestamp = if expires_in > 0 {
+            SystemTime::now().add(Duration::from_secs(expires_in as u64))
+        } else {
+            SystemTime::now().sub(Duration::from_secs(expires_in.unsigned_abs()))
+        };
+
+        Token {
+            access_token: "access-token".to_string(),
+            refresh_token: "refresh-token".to_string(),
+            token_type: "token-type".to_string(),
+            expires_in: Some(expires_in),
+            expires_in_timestamp: Some(expires_in_timestamp),
+        }
+    }
+
+    /// `PanicProvider` is a mock token provider that panics if called, as a way of
+    /// testing that the cache wrapper handles the request.
+    struct PanicProvider;
+    impl TokenProvider for PanicProvider {
+        fn get_token_with_subject<'a, S, I, T>(
+            &self,
+            _subject: Option<T>,
+            _scopes: I,
+        ) -> Result<TokenOrRequest, Error>
+        where
+            S: AsRef<str> + 'a,
+            I: IntoIterator<Item = &'a S> + Clone,
+            T: Into<String>,
+        {
+            panic!("should not have been reached")
+        }
+
+        fn parse_token_response<S>(
+            &self,
+            _hash: u64,
+            _response: http::Response<S>,
+        ) -> Result<Token, Error>
+        where
+            S: AsRef<[u8]>,
+        {
+            panic!("should not have been reached")
+        }
     }
 }
