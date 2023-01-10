@@ -209,7 +209,7 @@ mod test {
         assert!(matches!(
             cache.get(hash).unwrap(),
             TokenOrRequestReason::Token(..)
-        ))
+        ));
     }
 
     #[test]
