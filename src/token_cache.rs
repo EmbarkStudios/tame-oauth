@@ -2,7 +2,7 @@ use crate::token::{TokenOrRequest, TokenProvider};
 use crate::{error::Error, token::RequestReason, Token};
 
 use std::hash::Hasher;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 type Hash = u64;
 
@@ -13,7 +13,7 @@ struct Entry {
 
 /// An in-memory cache for caching tokens.
 pub struct TokenCache {
-    cache: Mutex<Vec<Entry>>,
+    cache: RwLock<Vec<Entry>>,
 }
 
 pub enum TokenOrRequestReason {
@@ -24,14 +24,14 @@ pub enum TokenOrRequestReason {
 impl TokenCache {
     pub fn new() -> Self {
         Self {
-            cache: Mutex::new(Vec::new()),
+            cache: RwLock::new(Vec::new()),
         }
     }
 
     /// Get a token from the cache that matches the hash
     pub fn get(&self, hash: Hash) -> Result<TokenOrRequestReason, Error> {
         let reason = {
-            let cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
+            let cache = self.cache.read().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
                 Ok(i) => {
                     let token = &cache[i].token;
@@ -52,7 +52,7 @@ impl TokenCache {
     /// Insert a token into the cache
     pub fn insert(&self, token: Token, hash: Hash) -> Result<(), Error> {
         // Last token wins, which...should?...be fine
-        let mut cache = self.cache.lock().map_err(|_e| Error::Poisoned)?;
+        let mut cache = self.cache.write().map_err(|_e| Error::Poisoned)?;
         match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
             Ok(i) => cache[i].token = token,
             Err(i) => {
