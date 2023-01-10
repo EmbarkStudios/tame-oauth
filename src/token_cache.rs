@@ -231,7 +231,7 @@ mod test {
         let expires_in_timestamp = if expires_in > 0 {
             SystemTime::now().add(Duration::from_secs(expires_in as u64))
         } else {
-            SystemTime::now().sub(Duration::from_secs(expires_in.abs() as u64))
+            SystemTime::now().sub(Duration::from_secs(expires_in.unsigned_abs()))
         };
 
         Token {
@@ -243,7 +243,7 @@ mod test {
         }
     }
 
-    /// PanicProvider is a mock token provider that panics if called, as a way of
+    /// `PanicProvider` is a mock token provider that panics if called, as a way of
     /// testing that the cache wrapper handles the request.
     struct PanicProvider;
     impl TokenProvider for PanicProvider {
