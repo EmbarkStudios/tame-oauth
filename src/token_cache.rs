@@ -78,6 +78,10 @@ impl<P> CachedTokenProvider<P> {
             inner: token_provider,
         }
     }
+
+    pub fn inner(&self) -> &P {
+        &self.inner
+    }
 }
 
 impl<P> TokenProvider for CachedTokenProvider<P>
