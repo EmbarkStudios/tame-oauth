@@ -85,7 +85,12 @@ pub mod gcp;
 mod jwt;
 
 mod error;
+mod id_token;
 mod token;
 mod token_cache;
 
-pub use crate::{error::Error, token::Token};
+pub use crate::{error::Error, id_token::IDToken, token::Token};
+
+pub trait ExpiarableToken {
+    fn has_expired(&self) -> bool;
+}

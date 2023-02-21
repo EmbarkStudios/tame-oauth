@@ -36,6 +36,8 @@ pub enum Error {
     },
     /// An error occured due to [`SystemTime`](std::time::SystemTime)
     SystemTime(std::time::SystemTimeError),
+    /// Unable to parse the returned token
+    InvalidTokenFormat,
 }
 
 impl fmt::Display for Error {
@@ -64,6 +66,9 @@ impl fmt::Display for Error {
             }
             SystemTime(te) => {
                 write!(f, "System Time error: {}", te)
+            }
+            InvalidTokenFormat => {
+                write!(f, "Invalid token format")
             }
         }
     }

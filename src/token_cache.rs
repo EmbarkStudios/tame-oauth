@@ -1,27 +1,29 @@
+use crate::id_token::{IDTokenOrRequest, IDTokenProvider};
 use crate::token::{TokenOrRequest, TokenProvider};
-use crate::{error::Error, token::RequestReason, Token};
+use crate::ExpiarableToken;
+use crate::{error::Error, token::RequestReason, IDToken, Token};
 
 use std::hash::Hasher;
 use std::sync::RwLock;
 
 type Hash = u64;
 
-struct Entry {
+struct Entry<T> {
     hash: Hash,
-    token: Token,
+    token: T,
 }
 
 /// An in-memory cache for caching tokens.
-pub struct TokenCache {
-    cache: RwLock<Vec<Entry>>,
+pub struct TokenCache<T> {
+    cache: RwLock<Vec<Entry<T>>>,
 }
 
-pub enum TokenOrRequestReason {
-    Token(Token),
+pub enum TokenOrRequestReason<T> {
+    Token(T),
     RequestReason(RequestReason),
 }
 
-impl TokenCache {
+impl<T> TokenCache<T> {
     pub fn new() -> Self {
         Self {
             cache: RwLock::new(Vec::new()),
@@ -29,7 +31,10 @@ impl TokenCache {
     }
 
     /// Get a token from the cache that matches the hash
-    pub fn get(&self, hash: Hash) -> Result<TokenOrRequestReason, Error> {
+    pub fn get(&self, hash: Hash) -> Result<TokenOrRequestReason<T>, Error>
+    where
+        T: ExpiarableToken + Clone,
+    {
         let reason = {
             let cache = self.cache.read().map_err(|_e| Error::Poisoned)?;
             match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
@@ -42,7 +47,7 @@ impl TokenCache {
 
                     RequestReason::Expired
                 }
-                Err(_) => RequestReason::ScopesChanged,
+                Err(_) => RequestReason::ParametersChanged,
             }
         };
 
@@ -50,7 +55,7 @@ impl TokenCache {
     }
 
     /// Insert a token into the cache
-    pub fn insert(&self, token: Token, hash: Hash) -> Result<(), Error> {
+    pub fn insert(&self, token: T, hash: Hash) -> Result<(), Error> {
         // Last token wins, which...should?...be fine
         let mut cache = self.cache.write().map_err(|_e| Error::Poisoned)?;
         match cache.binary_search_by(|i| i.hash.cmp(&hash)) {
@@ -67,7 +72,8 @@ impl TokenCache {
 /// Wraps a `TokenProvider` in a cache, only invokes the inner `TokenProvider` if
 /// the token in cache is expired, or if it doesn't exsist.
 pub struct CachedTokenProvider<P> {
-    cache: TokenCache,
+    access_tokens: TokenCache<Token>,
+    id_tokens: TokenCache<IDToken>,
     inner: P,
 }
 
@@ -75,7 +81,8 @@ impl<P> CachedTokenProvider<P> {
     /// Wraps a token provider with a cache
     pub fn wrap(token_provider: P) -> Self {
         Self {
-            cache: TokenCache::new(),
+            access_tokens: TokenCache::new(),
+            id_tokens: TokenCache::new(),
             inner: token_provider,
         }
     }
@@ -102,7 +109,7 @@ where
     {
         let hash = hash_scopes(&scopes);
 
-        let reason = match self.cache.get(hash)? {
+        let reason = match self.access_tokens.get(hash)? {
             TokenOrRequestReason::Token(token) => return Ok(TokenOrRequest::Token(token)),
             TokenOrRequestReason::RequestReason(reason) => reason,
         };
@@ -112,7 +119,7 @@ where
             TokenOrRequest::Request { request, .. } => Ok(TokenOrRequest::Request {
                 request,
                 reason,
-                scope_hash: hash,
+                hash,
             }),
         }
     }
@@ -127,9 +134,77 @@ where
     {
         let token = self.inner.parse_token_response(hash, response)?;
 
-        self.cache.insert(token.clone(), hash)?;
+        self.access_tokens.insert(token.clone(), hash)?;
         Ok(token)
     }
+}
+
+impl<P> IDTokenProvider for CachedTokenProvider<P>
+where
+    P: IDTokenProvider,
+{
+    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error> {
+        let hash = hash_str(audience);
+
+        let reason = match self.id_tokens.get(hash)? {
+            TokenOrRequestReason::Token(token) => return Ok(IDTokenOrRequest::IDToken(token)),
+            TokenOrRequestReason::RequestReason(reason) => reason,
+        };
+
+        match self.inner.get_id_token(audience)? {
+            IDTokenOrRequest::IDToken(token) => Ok(IDTokenOrRequest::IDToken(token)),
+            IDTokenOrRequest::AccessTokenRequest { request, .. } => {
+                Ok(IDTokenOrRequest::AccessTokenRequest {
+                    request,
+                    reason,
+                    hash,
+                })
+            }
+            IDTokenOrRequest::IDTokenRequest { request, .. } => {
+                Ok(IDTokenOrRequest::IDTokenRequest {
+                    request,
+                    reason,
+                    hash,
+                })
+            }
+        }
+    }
+
+    fn get_id_token_with_access_token<S>(
+        &self,
+        audience: &str,
+        response: crate::id_token::AccessTokenResponse<S>,
+    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        self.inner
+            .get_id_token_with_access_token(audience, response)
+    }
+
+    fn parse_id_token_response<S>(
+        &self,
+        hash: u64,
+        response: http::Response<S>,
+    ) -> Result<IDToken, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        let token = self.inner.parse_id_token_response(hash, response)?;
+
+        self.id_tokens.insert(token.clone(), hash)?;
+        Ok(token)
+    }
+}
+
+fn hash_str(str: &str) -> Hash {
+    let hash = {
+        let mut hasher = twox_hash::XxHash::default();
+        hasher.write(str.as_bytes());
+        hasher.finish()
+    };
+
+    hash
 }
 
 fn hash_scopes<'a, I, S>(scopes: &I) -> Hash
@@ -144,13 +219,7 @@ where
         .collect::<Vec<_>>()
         .join("|");
 
-    let hash = {
-        let mut hasher = twox_hash::XxHash::default();
-        hasher.write(scopes_str.as_bytes());
-        hasher.finish()
-    };
-
-    hash
+    hash_str(&scopes_str)
 }
 
 #[cfg(test)]
@@ -200,7 +269,7 @@ mod test {
 
         assert!(matches!(
             cache.get(hash).unwrap(),
-            TokenOrRequestReason::RequestReason(RequestReason::ScopesChanged)
+            TokenOrRequestReason::RequestReason(RequestReason::ParametersChanged)
         ));
 
         cache.insert(expired_token, hash).unwrap();
@@ -225,7 +294,7 @@ mod test {
         let hash = hash_scopes(&["scope1", "scope2"].iter());
         let token = mock_token(100);
 
-        cached_provider.cache.insert(token, hash).unwrap();
+        cached_provider.access_tokens.insert(token, hash).unwrap();
 
         let tor = cached_provider.get_token(&["scope1", "scope2"]).unwrap();
 
@@ -271,6 +340,34 @@ mod test {
             _hash: u64,
             _response: http::Response<S>,
         ) -> Result<Token, Error>
+        where
+            S: AsRef<[u8]>,
+        {
+            panic!("should not have been reached")
+        }
+    }
+
+    impl IDTokenProvider for PanicProvider {
+        fn get_id_token(&self, _audience: &str) -> Result<IDTokenOrRequest, Error> {
+            panic!("should not have been reached")
+        }
+
+        fn parse_id_token_response<S>(
+            &self,
+            _hash: u64,
+            _response: http::Response<S>,
+        ) -> Result<IDToken, Error>
+        where
+            S: AsRef<[u8]>,
+        {
+            panic!("should not have been reached")
+        }
+
+        fn get_id_token_with_access_token<S>(
+            &self,
+            _audience: &str,
+            _response: crate::id_token::AccessTokenResponse<S>,
+        ) -> Result<crate::id_token::IDTokenRequest, Error>
         where
             S: AsRef<[u8]>,
         {
