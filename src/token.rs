@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::{error::Error, ExpiarableToken};
 use std::time::SystemTime;
 
 /// Represents a token as returned by `OAuth2` servers.
@@ -27,10 +27,10 @@ pub struct Token {
     pub expires_in_timestamp: Option<SystemTime>,
 }
 
-impl Token {
+impl ExpiarableToken for Token {
     /// Returns true if we are expired.
     #[inline]
-    pub fn has_expired(&self) -> bool {
+    fn has_expired(&self) -> bool {
         if self.access_token.is_empty() {
             return true;
         }
@@ -45,8 +45,8 @@ impl Token {
 pub enum RequestReason {
     /// An existing token has expired
     Expired,
-    /// The requested scopes have never been seen before
-    ScopesChanged,
+    /// The requested scopes or audience have never been seen before
+    ParametersChanged,
 }
 
 /// Either a valid token, or an HTTP request that can be used to acquire one
@@ -60,8 +60,8 @@ pub enum TokenOrRequest {
         request: http::Request<Vec<u8>>,
         /// The reason we need to retrieve a new token
         reason: RequestReason,
-        /// An opaque hash of the scope(s) for which the request was constructed
-        scope_hash: u64,
+        /// An opaque hash of the unique parameters for which the request was constructed
+        hash: u64,
     },
 }
 
@@ -117,5 +117,28 @@ impl std::convert::TryInto<http::header::HeaderValue> for Token {
         let auth_header_val = format!("{} {}", self.token_type, self.access_token);
         http::header::HeaderValue::from_str(&auth_header_val)
             .map_err(|e| crate::Error::from(http::Error::from(e)))
+    }
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct TokenResponse {
+    /// The actual token
+    access_token: String,
+    /// The token type, pretty much always Header
+    token_type: String,
+    /// The time until the token expires and a new one needs to be requested
+    expires_in: i64,
+}
+
+impl From<TokenResponse> for Token {
+    fn from(tr: TokenResponse) -> Self {
+        Self {
+            access_token: tr.access_token,
+            token_type: tr.token_type,
+            refresh_token: String::new(),
+            expires_in: Some(tr.expires_in),
+            expires_in_timestamp: std::time::SystemTime::now()
+                .checked_add(std::time::Duration::from_secs(tr.expires_in as u64)),
+        }
     }
 }

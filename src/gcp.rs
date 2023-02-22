@@ -11,6 +11,7 @@ use end_user as eu;
 use metadata_server as ms;
 use service_account as sa;
 
+pub use crate::id_token::{IDToken, IDTokenOrRequest, IDTokenProvider};
 pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 pub use {
     eu::EndUserCredentials,
@@ -148,7 +149,7 @@ impl TokenProviderWrapper {
             }
         }
 
-        // Finaly, if we are on GCP, use the metadata server. If we're not on
+        // Finally, if we are on GCP, use the metadata server. If we're not on
         // GCP, this will just fail to read the file.
         if let Ok(full_name) = read_to_string("/sys/class/dmi/id/product_name") {
             // The product name can annoyingly include a newline...
@@ -209,6 +210,46 @@ impl TokenProvider for TokenProviderWrapper {
             Self::EndUser(x) => x.parse_token_response(hash, response),
             Self::Metadata(x) => x.parse_token_response(hash, response),
             Self::ServiceAccount(x) => x.parse_token_response(hash, response),
+        }
+    }
+}
+
+impl IDTokenProvider for TokenProviderWrapper {
+    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error> {
+        match self {
+            Self::EndUser(x) => x.get_id_token(audience),
+            Self::Metadata(x) => x.get_id_token(audience),
+            Self::ServiceAccount(x) => x.get_id_token(audience),
+        }
+    }
+
+    fn get_id_token_with_access_token<S>(
+        &self,
+        audience: &str,
+        response: crate::id_token::AccessTokenResponse<S>,
+    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        match self {
+            Self::EndUser(x) => x.get_id_token_with_access_token(audience, response),
+            Self::Metadata(x) => x.get_id_token_with_access_token(audience, response),
+            Self::ServiceAccount(x) => x.get_id_token_with_access_token(audience, response),
+        }
+    }
+
+    fn parse_id_token_response<S>(
+        &self,
+        hash: u64,
+        response: http::Response<S>,
+    ) -> Result<IDToken, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        match self {
+            Self::EndUser(x) => x.parse_id_token_response(hash, response),
+            Self::Metadata(x) => x.parse_id_token_response(hash, response),
+            Self::ServiceAccount(x) => x.parse_id_token_response(hash, response),
         }
     }
 }

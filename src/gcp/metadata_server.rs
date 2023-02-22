@@ -1,9 +1,14 @@
 use super::TokenResponse;
 use crate::{
     error::{self, Error},
+    id_token::{IDTokenOrRequest, IDTokenProvider},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
+    IDToken,
 };
+
+const METADATA_URL: &str =
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts";
 
 /// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
 /// using the metadata server accessible when running from within GCP.
@@ -52,10 +57,7 @@ impl TokenProvider for MetadataServerProviderInner {
 
         // Regardless of GCE or GAE, the token_uri is
         // `computeMetadata/v1/instance/service-accounts/<name or id>/token`.
-        let mut url = format!(
-            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/{}/token",
-            self.account_name
-        );
+        let mut url = format!("{}/{}/token", METADATA_URL, self.account_name);
 
         // Merge all the scopes into a single string.
         let scopes_str = scopes
@@ -80,8 +82,8 @@ impl TokenProvider for MetadataServerProviderInner {
 
         Ok(TokenOrRequest::Request {
             request,
-            reason: RequestReason::ScopesChanged,
-            scope_hash: 0,
+            reason: RequestReason::ParametersChanged,
+            hash: 0,
         })
     }
 
@@ -105,6 +107,64 @@ impl TokenProvider for MetadataServerProviderInner {
         // Convert it into our output.
         let token: Token = token_res.into();
         Ok(token)
+    }
+}
+
+impl IDTokenProvider for MetadataServerProviderInner {
+    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, error::Error> {
+        let url = format!(
+            "{}/{}/identity?audience={}",
+            METADATA_URL, self.account_name, audience,
+        );
+
+        let request = http::Request::builder()
+            .method("GET")
+            .uri(url)
+            .header("Metadata-Flavor", "Google")
+            .body(Vec::new())?;
+
+        Ok(IDTokenOrRequest::IDTokenRequest {
+            request,
+            reason: RequestReason::ParametersChanged,
+            hash: 0,
+        })
+    }
+
+    fn parse_id_token_response<S>(
+        &self,
+        _hash: u64,
+        response: http::Response<S>,
+    ) -> Result<IDToken, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        let (parts, body) = response.into_parts();
+
+        if !parts.status.is_success() {
+            return Err(Error::HttpStatus(parts.status));
+        }
+
+        let token = IDToken::new(String::from_utf8_lossy(body.as_ref()).into_owned())?;
+
+        Ok(token)
+    }
+
+    fn get_id_token_with_access_token<S>(
+        &self,
+        _audience: &str,
+        _access_token_resp: crate::id_token::AccessTokenResponse<S>,
+    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        // ID token via access token is not supported in the metadata service
+        // The token can be fetched directly via the metadataservice.
+        Err(Error::Auth(error::AuthError {
+            error: Some("Unsupported".to_string()),
+            error_description: Some(
+                "Metadata server id tokens via access token not supported".to_string(),
+            ),
+        }))
     }
 }
 

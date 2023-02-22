@@ -19,7 +19,9 @@ skip = [
     # reqwest uses old dependency (dev dependency)
     { name = "base64", version = "=0.13.1" }
 ]
-skip-tree = []
+skip-tree = [
+    { name = "windows-sys", version = "=0.42" },
+]
 
 [licenses]
 unlicensed = "deny"

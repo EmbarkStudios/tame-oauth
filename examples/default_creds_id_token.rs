@@ -8,8 +8,6 @@ use tame_oauth::gcp::*;
 // token hasn't expired
 #[tokio::main]
 async fn main() {
-    let scopes: Vec<_> = std::env::args().skip(1).collect();
-
     let provider = TokenProviderWrapper::get_default_provider()
         .expect("unable to read default token provider")
         .expect("unable to find default token provider");
@@ -19,10 +17,10 @@ async fn main() {
     // Attempt to get a token, since we have never used this accessor
     // before, it's guaranteed that we will need to make an HTTPS
     // request to the token provider to retrieve a token. This
-    // will also happen if we want to get a token for a different set
-    // of scopes, or if the token has expired.
-    match provider.get_token(&scopes).unwrap() {
-        TokenOrRequest::Request {
+    // will also happen if we want to get a token for a different
+    // audience, or if the token has expired.
+    match provider.get_id_token("my-audience").unwrap() {
+        IDTokenOrRequest::IDTokenRequest {
             // This is an http::Request that we can use to build
             // a client request for whichever HTTP client implementation
             // you wish to use
@@ -69,11 +67,11 @@ async fn main() {
             let buffer = response.bytes().await.unwrap();
             let response = builder.body(buffer).unwrap();
 
-            provider
-                .parse_token_response(hash, response)
+            let _token = provider
+                .parse_id_token_response(hash, response)
                 .expect("invalid token response");
 
-            println!("cool, we were able to receive a token!");
+            println!("cool, we were able to receive a id token!");
         }
         _ => unreachable!(),
     }

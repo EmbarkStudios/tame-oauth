@@ -1,16 +1,23 @@
+use std::convert::TryInto;
+
 use super::{
     jwt::{self, Algorithm, Header, Key},
     TokenResponse,
 };
 use crate::{
     error::{self, Error},
+    id_token::{
+        AccessTokenRequest, AccessTokenResponse, IDTokenOrRequest, IDTokenProvider, IDTokenRequest,
+        IDTokenResponse,
+    },
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
+    IDToken,
 };
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-/// Minimal parts needed from a GCP service acccount key for token acquisition
+/// Minimal parts needed from a GCP service account key for token acquisition
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
     /// The private key we use to sign
@@ -19,6 +26,12 @@ pub struct ServiceAccountInfo {
     pub client_email: String,
     /// The URI we send the token requests to, eg <https://oauth2.googleapis.com/token>
     pub token_uri: String,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct IDTokenResponseBody {
+    /// The actual token
+    token: String,
 }
 
 impl ServiceAccountInfo {
@@ -88,16 +101,12 @@ impl ServiceAccountProviderInner {
     pub fn get_account_info(&self) -> &ServiceAccountInfo {
         &self.info
     }
-}
 
-impl TokenProvider for ServiceAccountProviderInner {
-    /// Like [`ServiceAccountProviderInner::get_token`], but allows the JWT "subject"
-    /// to be passed in.
-    fn get_token_with_subject<'a, S, I, T>(
+    fn prepare_access_token_request<'a, S, I, T>(
         &self,
         subject: Option<T>,
         scopes: I,
-    ) -> Result<TokenOrRequest, Error>
+    ) -> Result<AccessTokenRequest, Error>
     where
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
@@ -145,10 +154,28 @@ impl TokenProvider for ServiceAccountProviderInner {
             .header(http::header::CONTENT_LENGTH, body.len())
             .body(body)?;
 
+        Ok(request)
+    }
+}
+
+impl TokenProvider for ServiceAccountProviderInner {
+    /// Like [`ServiceAccountProviderInner::get_token`], but allows the JWT "subject"
+    /// to be passed in.
+    fn get_token_with_subject<'a, S, I, T>(
+        &self,
+        subject: Option<T>,
+        scopes: I,
+    ) -> Result<TokenOrRequest, Error>
+    where
+        S: AsRef<str> + 'a,
+        I: IntoIterator<Item = &'a S>,
+        T: Into<String>,
+    {
+        let request = self.prepare_access_token_request(subject, scopes)?;
         Ok(TokenOrRequest::Request {
-            reason: RequestReason::ScopesChanged,
+            reason: RequestReason::ParametersChanged,
             request,
-            scope_hash: 0,
+            hash: 0,
         })
     }
 
@@ -185,6 +212,86 @@ impl TokenProvider for ServiceAccountProviderInner {
 
         let token_res: TokenResponse = serde_json::from_slice(body.as_ref())?;
         let token: Token = token_res.into();
+
+        Ok(token)
+    }
+}
+
+impl IDTokenProvider for ServiceAccountProviderInner {
+    fn get_id_token(&self, _audience: &str) -> Result<IDTokenOrRequest, Error> {
+        let request = self
+            .prepare_access_token_request(None::<&str>, &["https://www.googleapis.com/auth/iam"])?;
+
+        Ok(IDTokenOrRequest::AccessTokenRequest {
+            request,
+            reason: RequestReason::ParametersChanged,
+            hash: 0,
+        })
+    }
+
+    fn get_id_token_with_access_token<S>(
+        &self,
+        audience: &str,
+        response: AccessTokenResponse<S>,
+    ) -> Result<IDTokenRequest, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        let token = self.parse_token_response(0, response)?;
+
+        let sa_email = self.info.client_email.clone();
+        // See https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-oidc
+        // for details on what it is we're doing
+        let json_body = serde_json::to_vec(&serde_json::json!({
+            "audience": audience,
+            "includeEmail": true,
+        }))?;
+
+        let token_header_value: http::HeaderValue = token.try_into()?;
+
+        let request = http::Request::builder()
+            .method("POST")
+            .uri(format!("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{}:generateIdToken", sa_email))
+            .header(
+                http::header::CONTENT_TYPE,
+                "application/json; charset=utf-8",
+            )
+            .header(http::header::CONTENT_LENGTH, json_body.len())
+            .header(http::header::AUTHORIZATION, token_header_value)
+            .body(json_body)?;
+
+        Ok(request)
+    }
+
+    fn parse_id_token_response<S>(
+        &self,
+        _hash: u64,
+        response: IDTokenResponse<S>,
+    ) -> Result<IDToken, Error>
+    where
+        S: AsRef<[u8]>,
+    {
+        let (parts, body) = response.into_parts();
+
+        if !parts.status.is_success() {
+            let body_bytes = body.as_ref();
+
+            if parts
+                .headers
+                .get(http::header::CONTENT_TYPE)
+                .and_then(|ct| ct.to_str().ok())
+                == Some("application/json; charset=utf-8")
+            {
+                if let Ok(auth_error) = serde_json::from_slice::<error::AuthError>(body_bytes) {
+                    return Err(Error::Auth(auth_error));
+                }
+            }
+
+            return Err(Error::HttpStatus(parts.status));
+        }
+
+        let token_res: IDTokenResponseBody = serde_json::from_slice(body.as_ref())?;
+        let token = IDToken::new(token_res.token)?;
 
         Ok(token)
     }

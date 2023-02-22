@@ -53,3 +53,6 @@ features = ["rustls-tls"]
 [dev-dependencies.tokio]
 version = "1.0"
 features = ["macros", "rt-multi-thread"]
+
+[dev-dependencies.bytes]
+version = "1.4"
