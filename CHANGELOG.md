@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.0] - 2023-01-10
 ### Changed
-- [PR#51](https://github.com/EmbarkStudios/tame-oauth/pull/51) moved the token cache out of `ServiceAccountProvider` into a public type, and added a cached token provider that can wrap any other token provider. This wrapper now wrapps all the current gcp token providers, making them cached by default.
+- [PR#51](https://github.com/EmbarkStudios/tame-oauth/pull/51) moved the token cache out of `ServiceAccountProvider` into a public type, and added a cached token provider that can wrap any other token provider. This wrapper now wraps all the current gcp token providers, making them cached by default.
 - [PR#53](https://github.com/EmbarkStudios/tame-oauth/pull/53) changed the cache lock from a Mutex into a RwLock.
 
 ## [0.7.0] - 2022-02-02

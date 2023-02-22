@@ -34,7 +34,7 @@ pub enum Error {
         file: std::path::PathBuf,
         error: Box<Error>,
     },
-    /// An error occured due to [`SystemTime`](std::time::SystemTime)
+    /// An error occurred due to [`SystemTime`](std::time::SystemTime)
     SystemTime(std::time::SystemTimeError),
     /// Unable to parse the returned token
     InvalidTokenFormat,

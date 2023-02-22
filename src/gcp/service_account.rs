@@ -17,7 +17,7 @@ use crate::{
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-/// Minimal parts needed from a GCP service acccount key for token acquisition
+/// Minimal parts needed from a GCP service account key for token acquisition
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct ServiceAccountInfo {
     /// The private key we use to sign

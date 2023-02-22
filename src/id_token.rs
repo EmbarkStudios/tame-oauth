@@ -11,9 +11,7 @@ pub struct IDToken {
 impl IDToken {
     pub fn new(token: String) -> Result<IDToken, Error> {
         // Extract the exp claim from the token, so we can know if the token is expired or not.
-        let claims = token
-            .split('.').nth(1)
-            .ok_or(Error::InvalidTokenFormat)?;
+        let claims = token.split('.').nth(1).ok_or(Error::InvalidTokenFormat)?;
 
         let decoded = base64::decode(claims)?;
         let claims: TokenClaims = serde_json::from_slice(&decoded)?;
@@ -65,7 +63,7 @@ pub type IDTokenResponse<S> = http::Response<S>;
 /// Implementations are free to perform caching or always return a `Request` in
 /// the `TokenOrRequest`.
 pub trait IDTokenProvider {
-    /// Attemps to retrieve an id token that can be used when communicating via IAP etc.
+    /// Attempts to retrieve an id token that can be used when communicating via IAP etc.
     fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error>;
 
     /// Some token sources require a access token to be used to generte a id token.
@@ -78,7 +76,7 @@ pub trait IDTokenProvider {
     where
         S: AsRef<[u8]>;
 
-    /// Once a response has been received for an id token requst, call this method
+    /// Once a response has been received for an id token request, call this method
     /// to deserialize the token.
     fn parse_id_token_response<S>(
         &self,

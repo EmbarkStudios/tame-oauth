@@ -149,7 +149,7 @@ impl TokenProviderWrapper {
             }
         }
 
-        // Finaly, if we are on GCP, use the metadata server. If we're not on
+        // Finally, if we are on GCP, use the metadata server. If we're not on
         // GCP, this will just fail to read the file.
         if let Ok(full_name) = read_to_string("/sys/class/dmi/id/product_name") {
             // The product name can annoyingly include a newline...

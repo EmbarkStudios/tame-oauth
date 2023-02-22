@@ -70,7 +70,7 @@ impl<T> TokenCache<T> {
 }
 
 /// Wraps a `TokenProvider` in a cache, only invokes the inner `TokenProvider` if
-/// the token in cache is expired, or if it doesn't exsist.
+/// the token in cache is expired, or if it doesn't exist.
 pub struct CachedTokenProvider<P> {
     access_tokens: TokenCache<Token>,
     id_tokens: TokenCache<IDToken>,

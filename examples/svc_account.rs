@@ -74,7 +74,7 @@ async fn main() {
             let buffer = response.bytes().await.unwrap();
             let response = builder.body(buffer).unwrap();
 
-            // Tell our accesssor about the response, also passing
+            // Tell our accessor about the response, also passing
             // the scope_hash for the scopes we initially requested,
             // this will allow future token requests for those scopes
             // to use a cached token, at least until it expires (~1 hour)
