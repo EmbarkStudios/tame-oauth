@@ -59,9 +59,7 @@ pub type AccessTokenRequest = http::Request<Vec<u8>>;
 pub type AccessTokenResponse<S> = http::Response<S>;
 pub type IDTokenResponse<S> = http::Response<S>;
 
-/// A `IDTokenProvider` has a single method to implement `get_token`.
-/// Implementations are free to perform caching or always return a `Request` in
-/// the `TokenOrRequest`.
+/// A `IDTokenProvider` supplies all methods needed for all different flows to get a id token.
 pub trait IDTokenProvider {
     /// Attempts to retrieve an id token that can be used when communicating via IAP etc.
     fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error>;
@@ -76,7 +74,7 @@ pub trait IDTokenProvider {
     where
         S: AsRef<[u8]>;
 
-    /// Once a response has been received for an id token request, call this method
+    /// Once a `IDTokenResponse` has been received for an id token request, call this method
     /// to deserialize the token.
     fn parse_id_token_response<S>(
         &self,
