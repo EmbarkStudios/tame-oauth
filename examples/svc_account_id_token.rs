@@ -102,7 +102,6 @@ async fn execute_request(request: http::Request<Vec<u8>>) -> http::Response<Byte
     );
 
     let buffer = response.bytes().await.unwrap();
-    
 
     builder.body(buffer).unwrap()
 }
