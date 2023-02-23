@@ -31,7 +31,7 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-/// Wrapper around the different providers that are supported
+/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
 pub enum TokenProviderWrapper {
     EndUser(eu::EndUserCredentials),
     Metadata(ms::MetadataServerProvider),

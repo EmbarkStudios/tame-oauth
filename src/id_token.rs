@@ -40,6 +40,9 @@ impl CacheableToken for IDToken {
     }
 }
 
+/// Either a valid token, or an HTTP request. With some token sources, two different
+/// HTTP requests needs to be performed, one to get an access token and one to get
+/// the actual id token.
 pub enum IDTokenOrRequest {
     AccessTokenRequest {
         request: AccessTokenRequest,

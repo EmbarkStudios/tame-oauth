@@ -49,6 +49,9 @@ impl EndUserCredentialsInfo {
     }
 }
 
+/// A token provider for
+/// [default application credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default)
+/// Should not be used directly as it is not cached. Use `EndUserCredentials` instead.
 pub struct EndUserCredentialsInner {
     info: EndUserCredentialsInfo,
 }
