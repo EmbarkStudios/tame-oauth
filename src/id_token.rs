@@ -1,7 +1,8 @@
 use std::time::SystemTime;
 
-use crate::{token::RequestReason, Error, ExpiarableToken};
+use crate::{token::RequestReason, token_cache::CacheableToken, Error};
 
+/// Represents a id token as returned by `OAuth2` servers.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct IDToken {
     pub token: String,
@@ -23,7 +24,7 @@ impl IDToken {
     }
 }
 
-impl ExpiarableToken for IDToken {
+impl CacheableToken for IDToken {
     /// Returns true if token is expired.
     #[inline]
     fn has_expired(&self) -> bool {

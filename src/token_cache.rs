@@ -1,6 +1,7 @@
+//! Provides functionality for caching access tokens and id tokens.
+
 use crate::id_token::{IDTokenOrRequest, IDTokenProvider};
 use crate::token::{TokenOrRequest, TokenProvider};
-use crate::ExpiarableToken;
 use crate::{error::Error, token::RequestReason, IDToken, Token};
 
 use std::hash::Hasher;
@@ -33,7 +34,7 @@ impl<T> TokenCache<T> {
     /// Get a token from the cache that matches the hash
     pub fn get(&self, hash: Hash) -> Result<TokenOrRequestReason<T>, Error>
     where
-        T: ExpiarableToken + Clone,
+        T: CacheableToken + Clone,
     {
         let reason = {
             let cache = self.cache.read().map_err(|_e| Error::Poisoned)?;
@@ -67,6 +68,10 @@ impl<T> TokenCache<T> {
 
         Ok(())
     }
+}
+
+pub trait CacheableToken {
+    fn has_expired(&self) -> bool;
 }
 
 /// Wraps a `TokenProvider` in a cache, only invokes the inner `TokenProvider` if

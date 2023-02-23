@@ -1,7 +1,7 @@
-use crate::{error::Error, ExpiarableToken};
+use crate::{error::Error, token_cache::CacheableToken};
 use std::time::SystemTime;
 
-/// Represents a token as returned by `OAuth2` servers.
+/// Represents a access token as returned by `OAuth2` servers.
 ///
 /// * It is produced by all authentication flows.
 /// * It authenticates certain operations, and must be refreshed once it has
@@ -27,7 +27,7 @@ pub struct Token {
     pub expires_in_timestamp: Option<SystemTime>,
 }
 
-impl ExpiarableToken for Token {
+impl CacheableToken for Token {
     /// Returns true if we are expired.
     #[inline]
     fn has_expired(&self) -> bool {

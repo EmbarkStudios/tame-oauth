@@ -19,7 +19,7 @@
 
 ## Why not?
 
-* The only auth flow that is currently implemented is the service account flow for GCP. Other flows can be added, but right now that is the only one we need.
+* The only auth flows that is currently implemented is the service account, user credentials and metadata server flow for GCP. Other flows can be added, but right now GCP is the only provider we need.
 * There are several other oauth crates available that have many more features and are easier to work with, if you don't care about what HTTP clients they use.
 * This crate requires more boilerplate to use.
 
