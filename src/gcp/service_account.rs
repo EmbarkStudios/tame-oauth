@@ -225,7 +225,7 @@ impl IDTokenProvider for ServiceAccountProviderInner {
         Ok(IDTokenOrRequest::AccessTokenRequest {
             request,
             reason: RequestReason::ParametersChanged,
-            hash: 0,
+            audience_hash: 0,
         })
     }
 

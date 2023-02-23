@@ -47,12 +47,12 @@ pub enum IDTokenOrRequest {
     AccessTokenRequest {
         request: AccessTokenRequest,
         reason: RequestReason,
-        hash: u64,
+        audience_hash: u64,
     },
     IDTokenRequest {
         request: IDTokenRequest,
         reason: RequestReason,
-        hash: u64,
+        audience_hash: u64,
     },
     IDToken(IDToken),
 }

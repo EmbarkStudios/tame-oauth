@@ -25,7 +25,7 @@ async fn main() {
             // a client request for whichever HTTP client implementation
             // you wish to use
             request,
-            hash,
+            audience_hash,
             ..
         } => {
             let client = reqwest::Client::new();
@@ -68,7 +68,7 @@ async fn main() {
             let response = builder.body(buffer).unwrap();
 
             let _token = provider
-                .parse_id_token_response(hash, response)
+                .parse_id_token_response(audience_hash, response)
                 .expect("invalid token response");
 
             println!("cool, we were able to receive a id token!");

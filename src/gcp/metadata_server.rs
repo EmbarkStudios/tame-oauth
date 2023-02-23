@@ -127,7 +127,7 @@ impl IDTokenProvider for MetadataServerProviderInner {
         Ok(IDTokenOrRequest::IDTokenRequest {
             request,
             reason: RequestReason::ParametersChanged,
-            hash: 0,
+            audience_hash: 0,
         })
     }
 

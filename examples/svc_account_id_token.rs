@@ -30,7 +30,11 @@ async fn main() {
     // will also happen if we want to get a token for a different
     // audience, or if the token has expired.
     let token = match sa_provider.get_id_token(audience).unwrap() {
-        IDTokenOrRequest::AccessTokenRequest { request, hash, .. } => {
+        IDTokenOrRequest::AccessTokenRequest {
+            request,
+            audience_hash,
+            ..
+        } => {
             let access_token_response = execute_request(request).await;
 
             let id_token_request = sa_provider
@@ -40,7 +44,7 @@ async fn main() {
             let id_token_response = execute_request(id_token_request).await;
 
             sa_provider
-                .parse_id_token_response(hash, id_token_response)
+                .parse_id_token_response(audience_hash, id_token_response)
                 .unwrap()
         }
         _ => unreachable!(),

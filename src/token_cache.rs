@@ -168,14 +168,14 @@ where
                 Ok(IDTokenOrRequest::AccessTokenRequest {
                     request,
                     reason,
-                    hash,
+                    audience_hash: hash,
                 })
             }
             IDTokenOrRequest::IDTokenRequest { request, .. } => {
                 Ok(IDTokenOrRequest::IDTokenRequest {
                     request,
                     reason,
-                    hash,
+                    audience_hash: hash,
                 })
             }
         }
