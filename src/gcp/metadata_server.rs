@@ -21,7 +21,8 @@ impl MetadataServerProvider {
 }
 
 /// [Provides tokens](https://cloud.google.com/compute/docs/instances/verifying-instance-identity)
-/// using the metadata server accessible when running from within GCP
+/// using the metadata server accessible when running from within GCP. Should not be used directly as it
+/// is not cached. Use `MetadataServerProvider` instead.
 pub struct MetadataServerProviderInner {
     account_name: String,
 }

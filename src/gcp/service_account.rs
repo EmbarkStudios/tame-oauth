@@ -64,7 +64,7 @@ impl ServiceAccountProvider {
     }
 }
 
-/// A token provider for a GCP service account.
+/// A token provider for a GCP service account. Should not be used directly as it is not cached. Use `ServiceAccountProvider` instead.
 pub struct ServiceAccountProviderInner {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,

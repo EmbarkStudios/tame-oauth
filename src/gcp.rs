@@ -3,9 +3,9 @@
 
 use crate::{error::Error, jwt};
 
-mod end_user;
-mod metadata_server;
-mod service_account;
+pub mod end_user;
+pub mod metadata_server;
+pub mod service_account;
 
 use end_user as eu;
 use metadata_server as ms;
@@ -14,9 +14,9 @@ use service_account as sa;
 pub use crate::id_token::{IDToken, IDTokenOrRequest, IDTokenProvider};
 pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 pub use {
-    eu::EndUserCredentials,
-    ms::MetadataServerProvider,
-    sa::{ServiceAccountInfo, ServiceAccountProvider},
+    end_user::{EndUserCredentials, EndUserCredentialsInfo},
+    metadata_server::MetadataServerProvider,
+    service_account::{ServiceAccountInfo, ServiceAccountProvider},
 };
 
 /// Both the [`ServiceAccountProvider`] and [`MetadataServerProvider`] get back
@@ -31,7 +31,7 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-/// Wrapper around the different providers that are supported
+/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
 pub enum TokenProviderWrapper {
     EndUser(eu::EndUserCredentials),
     Metadata(ms::MetadataServerProvider),
