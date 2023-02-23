@@ -4,6 +4,7 @@
 use crate::{error::Error, jwt};
 
 mod end_user;
+mod external_account;
 mod metadata_server;
 mod service_account;
 
