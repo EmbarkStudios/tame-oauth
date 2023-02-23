@@ -175,7 +175,7 @@ impl TokenProvider for ServiceAccountProviderInner {
         Ok(TokenOrRequest::Request {
             reason: RequestReason::ParametersChanged,
             request,
-            hash: 0,
+            scope_hash: 0,
         })
     }
 

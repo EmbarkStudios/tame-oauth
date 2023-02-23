@@ -118,9 +118,9 @@ where
         I: IntoIterator<Item = &'a S> + Clone,
         T: Into<String>,
     {
-        let hash = hash_scopes(&scopes);
+        let scope_hash = hash_scopes(&scopes);
 
-        let reason = match self.access_tokens.get(hash)? {
+        let reason = match self.access_tokens.get(scope_hash)? {
             TokenOrRequestReason::Token(token) => return Ok(TokenOrRequest::Token(token)),
             TokenOrRequestReason::RequestReason(reason) => reason,
         };
@@ -130,7 +130,7 @@ where
             TokenOrRequest::Request { request, .. } => Ok(TokenOrRequest::Request {
                 request,
                 reason,
-                hash,
+                scope_hash,
             }),
         }
     }

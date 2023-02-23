@@ -61,7 +61,7 @@ pub enum TokenOrRequest {
         /// The reason we need to retrieve a new token
         reason: RequestReason,
         /// An opaque hash of the unique parameters for which the request was constructed
-        hash: u64,
+        scope_hash: u64,
     },
 }
 

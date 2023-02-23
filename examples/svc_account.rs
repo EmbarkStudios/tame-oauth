@@ -32,7 +32,7 @@ async fn main() {
             // a client request for whichever HTTP client implementation
             // you wish to use
             request,
-            hash,
+            scope_hash,
             ..
         } => {
             let client = reqwest::Client::new();
@@ -78,7 +78,9 @@ async fn main() {
             // the scope_hash for the scopes we initially requested,
             // this will allow future token requests for those scopes
             // to use a cached token, at least until it expires (~1 hour)
-            sa_provider.parse_token_response(hash, response).unwrap()
+            sa_provider
+                .parse_token_response(scope_hash, response)
+                .unwrap()
         }
         _ => unreachable!(),
     };

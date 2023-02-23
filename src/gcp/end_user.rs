@@ -134,7 +134,7 @@ impl TokenProvider for EndUserCredentialsInner {
         Ok(TokenOrRequest::Request {
             request,
             reason: RequestReason::ParametersChanged,
-            hash: 0,
+            scope_hash: 0,
         })
     }
 

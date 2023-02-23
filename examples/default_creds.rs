@@ -27,7 +27,7 @@ async fn main() {
             // a client request for whichever HTTP client implementation
             // you wish to use
             request,
-            hash,
+            scope_hash,
             ..
         } => {
             let client = reqwest::Client::new();
@@ -70,7 +70,7 @@ async fn main() {
             let response = builder.body(buffer).unwrap();
 
             provider
-                .parse_token_response(hash, response)
+                .parse_token_response(scope_hash, response)
                 .expect("invalid token response");
 
             println!("cool, we were able to receive a token!");
