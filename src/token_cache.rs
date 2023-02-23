@@ -70,6 +70,12 @@ impl<T> TokenCache<T> {
     }
 }
 
+impl<T> Default for TokenCache<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait CacheableToken {
     fn has_expired(&self) -> bool;
 }
