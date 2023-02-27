@@ -53,7 +53,7 @@ impl TokenProviderWrapper {
     /// contains invalid JSON, an error is returned with the details
     pub fn get_default_provider() -> Result<Option<Self>, Error> {
         TokenProviderWrapperInner::get_default_provider()
-            .map(|provider| provider.map(|provider| CachedTokenProvider::wrap(provider)))
+            .map(|provider| provider.map(CachedTokenProvider::wrap))
     }
 
     /// Gets the kind of token provider
