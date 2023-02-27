@@ -60,6 +60,16 @@ impl TokenProviderWrapper {
     pub fn kind(&self) -> &'static str {
         self.inner().kind()
     }
+
+    pub fn is_service_account_provider(&self) -> bool {
+        self.inner().is_service_account_provider()
+    }
+    pub fn is_metadata_server_provider(&self) -> bool {
+        self.inner().is_metadata_server_provider()
+    }
+    pub fn is_end_user_credentials_provider(&self) -> bool {
+        self.inner().is_end_user_credentials_provider()
+    }
 }
 
 /// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
@@ -195,6 +205,16 @@ impl TokenProviderWrapperInner {
             Self::Metadata(_) => "Metadata Server",
             Self::ServiceAccount(_) => "Service Account",
         }
+    }
+
+    pub fn is_service_account_provider(&self) -> bool {
+        matches!(self, TokenProviderWrapperInner::ServiceAccount(_))
+    }
+    pub fn is_metadata_server_provider(&self) -> bool {
+        matches!(self, TokenProviderWrapperInner::Metadata(_))
+    }
+    pub fn is_end_user_credentials_provider(&self) -> bool {
+        matches!(self, TokenProviderWrapperInner::EndUser(_))
     }
 }
 
