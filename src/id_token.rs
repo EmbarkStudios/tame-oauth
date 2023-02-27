@@ -6,7 +6,7 @@ use crate::{token::RequestReason, token_cache::CacheableToken, Error};
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct IDToken {
     pub token: String,
-    pub expiration: u64,
+    pub expiration: SystemTime,
 }
 
 impl IDToken {
@@ -19,7 +19,9 @@ impl IDToken {
 
         Ok(Self {
             token,
-            expiration: claims.exp,
+            expiration: SystemTime::UNIX_EPOCH
+                .checked_add(std::time::Duration::from_secs(claims.exp))
+                .unwrap_or(SystemTime::UNIX_EPOCH),
         })
     }
 }
@@ -32,11 +34,7 @@ impl CacheableToken for IDToken {
             return true;
         }
 
-        let expiry = SystemTime::UNIX_EPOCH
-            .checked_add(std::time::Duration::from_secs(self.expiration))
-            .unwrap_or(SystemTime::UNIX_EPOCH);
-
-        expiry <= SystemTime::now()
+        self.expiration <= SystemTime::now()
     }
 }
 
@@ -96,6 +94,8 @@ struct TokenClaims {
 
 #[cfg(test)]
 mod tests {
+    use std::time::SystemTime;
+
     use super::IDToken;
 
     #[test]
@@ -117,6 +117,13 @@ mod tests {
         let id_token = IDToken::new(raw_token.to_owned()).unwrap();
 
         assert_eq!(id_token.token, raw_token);
-        assert_eq!(id_token.expiration, 1676641773);
+        assert_eq!(
+            id_token
+                .expiration
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            1676641773
+        );
     }
 }
