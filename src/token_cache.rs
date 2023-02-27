@@ -98,7 +98,7 @@ impl<P> CachedTokenProvider<P> {
         }
     }
 
-    /// Gets a reference to the wrapped token provider
+    /// Gets a reference to the wrapped (uncached) token provider
     pub fn inner(&self) -> &P {
         &self.inner
     }

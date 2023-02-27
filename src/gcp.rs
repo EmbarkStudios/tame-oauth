@@ -1,6 +1,7 @@
 //! Provides functionality for
 //! [Google oauth](https://developers.google.com/identity/protocols/oauth2)
 
+use crate::token_cache::CachedTokenProvider;
 use crate::{error::Error, jwt};
 
 pub mod end_user;
@@ -31,13 +32,7 @@ struct TokenResponse {
     expires_in: i64,
 }
 
-/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
-pub enum TokenProviderWrapper {
-    EndUser(eu::EndUserCredentials),
-    Metadata(ms::MetadataServerProvider),
-    ServiceAccount(sa::ServiceAccountProvider),
-}
-
+pub type TokenProviderWrapper = CachedTokenProvider<TokenProviderWrapperInner>;
 impl TokenProviderWrapper {
     /// Get a `TokenProvider` following the "Google Default Credentials"
     /// flow, in order:
@@ -56,6 +51,29 @@ impl TokenProviderWrapper {
     /// If it appears that a method is being used, but is actually invalid,
     /// eg `GOOGLE_APPLICATION_CREDENTIALS` is set but the file doesn't exist or
     /// contains invalid JSON, an error is returned with the details
+    pub fn get_default_provider() -> Result<Option<Self>, Error> {
+        TokenProviderWrapperInner::get_default_provider()
+            .map(|provider| provider.map(|provider| CachedTokenProvider::wrap(provider)))
+    }
+
+    /// Gets the kind of token provider
+    pub fn kind(&self) -> &'static str {
+        self.inner().kind()
+    }
+}
+
+/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
+/// Should not be used directly as it is not cached. Use `TokenProviderWrapper` instead.
+pub enum TokenProviderWrapperInner {
+    EndUser(eu::EndUserCredentialsInner),
+    Metadata(ms::MetadataServerProviderInner),
+    ServiceAccount(sa::ServiceAccountProviderInner),
+}
+
+impl TokenProviderWrapperInner {
+    /// Get a `TokenProvider` following the "Google Default Credentials" flow.
+    /// Returns a uncached token provider, use `TokenProviderWrapper::get_default_provider`
+    /// instead.
     pub fn get_default_provider() -> Result<Option<Self>, Error> {
         use std::{fs::read_to_string, path::PathBuf};
 
@@ -82,8 +100,8 @@ impl TokenProviderWrapper {
                 }
             };
 
-            return Ok(Some(TokenProviderWrapper::ServiceAccount(
-                sa::ServiceAccountProvider::new(sa_info).map_err(|e| {
+            return Ok(Some(TokenProviderWrapperInner::ServiceAccount(
+                sa::ServiceAccountProviderInner::new(sa_info).map_err(|e| {
                     Error::InvalidCredentials {
                         file: cred_path.into(),
                         error: Box::new(e),
@@ -134,8 +152,8 @@ impl TokenProviderWrapper {
                         error: Box::new(e),
                     })?;
 
-                    return Ok(Some(TokenProviderWrapper::EndUser(
-                        eu::EndUserCredentials::new(end_user_credentials),
+                    return Ok(Some(TokenProviderWrapperInner::EndUser(
+                        eu::EndUserCredentialsInner::new(end_user_credentials),
                     )));
                 }
                 // Skip not found errors, and fall back to the metadata server check
@@ -158,8 +176,8 @@ impl TokenProviderWrapper {
                 // This matches the Golang client. If new products
                 // add additional values, this will need to be updated.
                 "Google" | "Google Compute Engine" => {
-                    return Ok(Some(TokenProviderWrapper::Metadata(
-                        ms::MetadataServerProvider::new(None),
+                    return Ok(Some(TokenProviderWrapperInner::Metadata(
+                        ms::MetadataServerProviderInner::new(None),
                     )));
                 }
                 _ => {}
@@ -180,7 +198,7 @@ impl TokenProviderWrapper {
     }
 }
 
-impl TokenProvider for TokenProviderWrapper {
+impl TokenProvider for TokenProviderWrapperInner {
     fn get_token_with_subject<'a, S, I, T>(
         &self,
         subject: Option<T>,
@@ -192,9 +210,13 @@ impl TokenProvider for TokenProviderWrapper {
         T: Into<String>,
     {
         match self {
-            Self::EndUser(x) => x.get_token_with_subject(subject, scopes),
-            Self::Metadata(x) => x.get_token_with_subject(subject, scopes),
-            Self::ServiceAccount(x) => x.get_token_with_subject(subject, scopes),
+            Self::EndUser(token_provider) => token_provider.get_token_with_subject(subject, scopes),
+            Self::Metadata(token_provider) => {
+                token_provider.get_token_with_subject(subject, scopes)
+            }
+            Self::ServiceAccount(token_provider) => {
+                token_provider.get_token_with_subject(subject, scopes)
+            }
         }
     }
 
@@ -207,19 +229,21 @@ impl TokenProvider for TokenProviderWrapper {
         S: AsRef<[u8]>,
     {
         match self {
-            Self::EndUser(x) => x.parse_token_response(hash, response),
-            Self::Metadata(x) => x.parse_token_response(hash, response),
-            Self::ServiceAccount(x) => x.parse_token_response(hash, response),
+            Self::EndUser(token_provider) => token_provider.parse_token_response(hash, response),
+            Self::Metadata(token_provider) => token_provider.parse_token_response(hash, response),
+            Self::ServiceAccount(token_provider) => {
+                token_provider.parse_token_response(hash, response)
+            }
         }
     }
 }
 
-impl IDTokenProvider for TokenProviderWrapper {
+impl IDTokenProvider for TokenProviderWrapperInner {
     fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error> {
         match self {
-            Self::EndUser(x) => x.get_id_token(audience),
-            Self::Metadata(x) => x.get_id_token(audience),
-            Self::ServiceAccount(x) => x.get_id_token(audience),
+            Self::EndUser(token_provider) => token_provider.get_id_token(audience),
+            Self::Metadata(token_provider) => token_provider.get_id_token(audience),
+            Self::ServiceAccount(token_provider) => token_provider.get_id_token(audience),
         }
     }
 
@@ -232,9 +256,15 @@ impl IDTokenProvider for TokenProviderWrapper {
         S: AsRef<[u8]>,
     {
         match self {
-            Self::EndUser(x) => x.get_id_token_with_access_token(audience, response),
-            Self::Metadata(x) => x.get_id_token_with_access_token(audience, response),
-            Self::ServiceAccount(x) => x.get_id_token_with_access_token(audience, response),
+            Self::EndUser(token_provider) => {
+                token_provider.get_id_token_with_access_token(audience, response)
+            }
+            Self::Metadata(token_provider) => {
+                token_provider.get_id_token_with_access_token(audience, response)
+            }
+            Self::ServiceAccount(token_provider) => {
+                token_provider.get_id_token_with_access_token(audience, response)
+            }
         }
     }
 
@@ -247,9 +277,13 @@ impl IDTokenProvider for TokenProviderWrapper {
         S: AsRef<[u8]>,
     {
         match self {
-            Self::EndUser(x) => x.parse_id_token_response(hash, response),
-            Self::Metadata(x) => x.parse_id_token_response(hash, response),
-            Self::ServiceAccount(x) => x.parse_id_token_response(hash, response),
+            Self::EndUser(token_provider) => token_provider.parse_id_token_response(hash, response),
+            Self::Metadata(token_provider) => {
+                token_provider.parse_id_token_response(hash, response)
+            }
+            Self::ServiceAccount(token_provider) => {
+                token_provider.parse_id_token_response(hash, response)
+            }
         }
     }
 }

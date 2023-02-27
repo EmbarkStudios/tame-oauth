@@ -228,7 +228,7 @@ mod test {
     fn wrapper_dispatch() {
         // Wrap the metadata server provider.
         let provider =
-            crate::gcp::TokenProviderWrapper::Metadata(MetadataServerProvider::new(None));
+            crate::gcp::TokenProviderWrapperInner::Metadata(MetadataServerProviderInner::new(None));
 
         // And then have the same test as metadata_with_scopes
         let scopes = ["scope1", "scope2"];
