@@ -89,4 +89,4 @@ mod id_token;
 mod token;
 pub mod token_cache;
 
-pub use crate::{error::Error, id_token::IDToken, token::Token};
+pub use crate::{error::Error, id_token::IdToken, token::Token};

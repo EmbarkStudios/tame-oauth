@@ -1,8 +1,8 @@
 //! Provides functionality for caching access tokens and id tokens.
 
-use crate::id_token::{IDTokenOrRequest, IDTokenProvider};
+use crate::id_token::{IdTokenOrRequest, IdTokenProvider};
 use crate::token::{TokenOrRequest, TokenProvider};
-use crate::{error::Error, token::RequestReason, IDToken, Token};
+use crate::{error::Error, token::RequestReason, IdToken, Token};
 
 use std::hash::Hasher;
 use std::sync::RwLock;
@@ -84,7 +84,7 @@ pub trait CacheableToken {
 /// the token in cache is expired, or if it doesn't exist.
 pub struct CachedTokenProvider<P> {
     access_tokens: TokenCache<Token>,
-    id_tokens: TokenCache<IDToken>,
+    id_tokens: TokenCache<IdToken>,
     inner: P,
 }
 
@@ -150,29 +150,29 @@ where
     }
 }
 
-impl<P> IDTokenProvider for CachedTokenProvider<P>
+impl<P> IdTokenProvider for CachedTokenProvider<P>
 where
-    P: IDTokenProvider,
+    P: IdTokenProvider,
 {
-    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error> {
+    fn get_id_token(&self, audience: &str) -> Result<IdTokenOrRequest, Error> {
         let hash = hash_str(audience);
 
         let reason = match self.id_tokens.get(hash)? {
-            TokenOrRequestReason::Token(token) => return Ok(IDTokenOrRequest::IDToken(token)),
+            TokenOrRequestReason::Token(token) => return Ok(IdTokenOrRequest::IdToken(token)),
             TokenOrRequestReason::RequestReason(reason) => reason,
         };
 
         match self.inner.get_id_token(audience)? {
-            IDTokenOrRequest::IDToken(token) => Ok(IDTokenOrRequest::IDToken(token)),
-            IDTokenOrRequest::AccessTokenRequest { request, .. } => {
-                Ok(IDTokenOrRequest::AccessTokenRequest {
+            IdTokenOrRequest::IdToken(token) => Ok(IdTokenOrRequest::IdToken(token)),
+            IdTokenOrRequest::AccessTokenRequest { request, .. } => {
+                Ok(IdTokenOrRequest::AccessTokenRequest {
                     request,
                     reason,
                     audience_hash: hash,
                 })
             }
-            IDTokenOrRequest::IDTokenRequest { request, .. } => {
-                Ok(IDTokenOrRequest::IDTokenRequest {
+            IdTokenOrRequest::IdTokenRequest { request, .. } => {
+                Ok(IdTokenOrRequest::IdTokenRequest {
                     request,
                     reason,
                     audience_hash: hash,
@@ -185,7 +185,7 @@ where
         &self,
         audience: &str,
         response: crate::id_token::AccessTokenResponse<S>,
-    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    ) -> Result<crate::id_token::IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -197,7 +197,7 @@ where
         &self,
         hash: u64,
         response: http::Response<S>,
-    ) -> Result<IDToken, Error>
+    ) -> Result<IdToken, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -358,8 +358,8 @@ mod test {
         }
     }
 
-    impl IDTokenProvider for PanicProvider {
-        fn get_id_token(&self, _audience: &str) -> Result<IDTokenOrRequest, Error> {
+    impl IdTokenProvider for PanicProvider {
+        fn get_id_token(&self, _audience: &str) -> Result<IdTokenOrRequest, Error> {
             panic!("should not have been reached")
         }
 
@@ -367,7 +367,7 @@ mod test {
             &self,
             _hash: u64,
             _response: http::Response<S>,
-        ) -> Result<IDToken, Error>
+        ) -> Result<IdToken, Error>
         where
             S: AsRef<[u8]>,
         {
@@ -378,7 +378,7 @@ mod test {
             &self,
             _audience: &str,
             _response: crate::id_token::AccessTokenResponse<S>,
-        ) -> Result<crate::id_token::IDTokenRequest, Error>
+        ) -> Result<crate::id_token::IdTokenRequest, Error>
         where
             S: AsRef<[u8]>,
         {

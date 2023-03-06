@@ -20,7 +20,7 @@ async fn main() {
     // will also happen if we want to get a token for a different
     // audience, or if the token has expired.
     match provider.get_id_token("my-audience").unwrap() {
-        IDTokenOrRequest::IDTokenRequest {
+        IdTokenOrRequest::IdTokenRequest {
             // This is an http::Request that we can use to build
             // a client request for whichever HTTP client implementation
             // you wish to use

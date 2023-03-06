@@ -12,7 +12,7 @@ use end_user as eu;
 use metadata_server as ms;
 use service_account as sa;
 
-pub use crate::id_token::{IDToken, IDTokenOrRequest, IDTokenProvider};
+pub use crate::id_token::{IdToken, IdTokenOrRequest, IdTokenProvider};
 pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 pub use {
     end_user::{EndUserCredentials, EndUserCredentialsInfo},
@@ -72,7 +72,7 @@ impl TokenProviderWrapper {
     }
 }
 
-/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IDTokenProvider`.
+/// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IdTokenProvider`.
 /// Should not be used directly as it is not cached. Use `TokenProviderWrapper` instead.
 pub enum TokenProviderWrapperInner {
     EndUser(eu::EndUserCredentialsInner),
@@ -258,8 +258,8 @@ impl TokenProvider for TokenProviderWrapperInner {
     }
 }
 
-impl IDTokenProvider for TokenProviderWrapperInner {
-    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, Error> {
+impl IdTokenProvider for TokenProviderWrapperInner {
+    fn get_id_token(&self, audience: &str) -> Result<IdTokenOrRequest, Error> {
         match self {
             Self::EndUser(token_provider) => token_provider.get_id_token(audience),
             Self::Metadata(token_provider) => token_provider.get_id_token(audience),
@@ -271,7 +271,7 @@ impl IDTokenProvider for TokenProviderWrapperInner {
         &self,
         audience: &str,
         response: crate::id_token::AccessTokenResponse<S>,
-    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    ) -> Result<crate::id_token::IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -292,7 +292,7 @@ impl IDTokenProvider for TokenProviderWrapperInner {
         &self,
         hash: u64,
         response: http::Response<S>,
-    ) -> Result<IDToken, Error>
+    ) -> Result<IdToken, Error>
     where
         S: AsRef<[u8]>,
     {
