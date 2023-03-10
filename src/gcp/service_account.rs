@@ -7,12 +7,12 @@ use super::{
 use crate::{
     error::{self, Error},
     id_token::{
-        AccessTokenRequest, AccessTokenResponse, IDTokenOrRequest, IDTokenProvider, IDTokenRequest,
-        IDTokenResponse,
+        AccessTokenRequest, AccessTokenResponse, IdTokenOrRequest, IdTokenProvider, IdTokenRequest,
+        IdTokenResponse,
     },
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
-    IDToken,
+    IdToken,
 };
 
 const GRANT_TYPE: &str = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -29,7 +29,7 @@ pub struct ServiceAccountInfo {
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct IDTokenResponseBody {
+struct IdTokenResponseBody {
     /// The actual token
     token: String,
 }
@@ -217,12 +217,12 @@ impl TokenProvider for ServiceAccountProviderInner {
     }
 }
 
-impl IDTokenProvider for ServiceAccountProviderInner {
-    fn get_id_token(&self, _audience: &str) -> Result<IDTokenOrRequest, Error> {
+impl IdTokenProvider for ServiceAccountProviderInner {
+    fn get_id_token(&self, _audience: &str) -> Result<IdTokenOrRequest, Error> {
         let request = self
             .prepare_access_token_request(None::<&str>, &["https://www.googleapis.com/auth/iam"])?;
 
-        Ok(IDTokenOrRequest::AccessTokenRequest {
+        Ok(IdTokenOrRequest::AccessTokenRequest {
             request,
             reason: RequestReason::ParametersChanged,
             audience_hash: 0,
@@ -233,7 +233,7 @@ impl IDTokenProvider for ServiceAccountProviderInner {
         &self,
         audience: &str,
         response: AccessTokenResponse<S>,
-    ) -> Result<IDTokenRequest, Error>
+    ) -> Result<IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -266,8 +266,8 @@ impl IDTokenProvider for ServiceAccountProviderInner {
     fn parse_id_token_response<S>(
         &self,
         _hash: u64,
-        response: IDTokenResponse<S>,
-    ) -> Result<IDToken, Error>
+        response: IdTokenResponse<S>,
+    ) -> Result<IdToken, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -290,8 +290,8 @@ impl IDTokenProvider for ServiceAccountProviderInner {
             return Err(Error::HttpStatus(parts.status));
         }
 
-        let token_res: IDTokenResponseBody = serde_json::from_slice(body.as_ref())?;
-        let token = IDToken::new(token_res.token)?;
+        let token_res: IdTokenResponseBody = serde_json::from_slice(body.as_ref())?;
+        let token = IdToken::new(token_res.token)?;
 
         Ok(token)
     }

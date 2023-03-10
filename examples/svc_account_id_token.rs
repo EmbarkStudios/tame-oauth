@@ -30,7 +30,7 @@ async fn main() {
     // will also happen if we want to get a token for a different
     // audience, or if the token has expired.
     let token = match sa_provider.get_id_token(audience).unwrap() {
-        IDTokenOrRequest::AccessTokenRequest {
+        IdTokenOrRequest::AccessTokenRequest {
             request,
             audience_hash,
             ..
@@ -57,7 +57,7 @@ async fn main() {
     // Retrieving a token for the same scopes for which a token has been acquired
     // will use the cached token until it expires
     match sa_provider.get_id_token(audience).unwrap() {
-        IDTokenOrRequest::IDToken(tk) => {
+        IdTokenOrRequest::IdToken(tk) => {
             assert_eq!(tk, token);
             println!(
                 "cool, you were able to retrieve a token with aud {}!",

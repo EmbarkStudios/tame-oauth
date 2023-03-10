@@ -1,10 +1,10 @@
 use super::TokenResponse;
 use crate::{
     error::{self, Error},
-    id_token::{IDTokenOrRequest, IDTokenProvider},
+    id_token::{IdTokenOrRequest, IdTokenProvider},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
-    IDToken,
+    IdToken,
 };
 
 const METADATA_URL: &str =
@@ -111,8 +111,8 @@ impl TokenProvider for MetadataServerProviderInner {
     }
 }
 
-impl IDTokenProvider for MetadataServerProviderInner {
-    fn get_id_token(&self, audience: &str) -> Result<IDTokenOrRequest, error::Error> {
+impl IdTokenProvider for MetadataServerProviderInner {
+    fn get_id_token(&self, audience: &str) -> Result<IdTokenOrRequest, error::Error> {
         let url = format!(
             "{}/{}/identity?audience={}",
             METADATA_URL, self.account_name, audience,
@@ -124,7 +124,7 @@ impl IDTokenProvider for MetadataServerProviderInner {
             .header("Metadata-Flavor", "Google")
             .body(Vec::new())?;
 
-        Ok(IDTokenOrRequest::IDTokenRequest {
+        Ok(IdTokenOrRequest::IdTokenRequest {
             request,
             reason: RequestReason::ParametersChanged,
             audience_hash: 0,
@@ -135,7 +135,7 @@ impl IDTokenProvider for MetadataServerProviderInner {
         &self,
         _hash: u64,
         response: http::Response<S>,
-    ) -> Result<IDToken, Error>
+    ) -> Result<IdToken, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -145,7 +145,7 @@ impl IDTokenProvider for MetadataServerProviderInner {
             return Err(Error::HttpStatus(parts.status));
         }
 
-        let token = IDToken::new(String::from_utf8_lossy(body.as_ref()).into_owned())?;
+        let token = IdToken::new(String::from_utf8_lossy(body.as_ref()).into_owned())?;
 
         Ok(token)
     }
@@ -154,7 +154,7 @@ impl IDTokenProvider for MetadataServerProviderInner {
         &self,
         _audience: &str,
         _access_token_resp: crate::id_token::AccessTokenResponse<S>,
-    ) -> Result<crate::id_token::IDTokenRequest, Error>
+    ) -> Result<crate::id_token::IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -228,7 +228,7 @@ mod test {
     fn wrapper_dispatch() {
         // Wrap the metadata server provider.
         let provider =
-            crate::gcp::TokenProviderWrapper::Metadata(MetadataServerProvider::new(None));
+            crate::gcp::TokenProviderWrapperInner::Metadata(MetadataServerProviderInner::new(None));
 
         // And then have the same test as metadata_with_scopes
         let scopes = ["scope1", "scope2"];

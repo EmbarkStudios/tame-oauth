@@ -2,11 +2,11 @@ use super::TokenResponse;
 use crate::{
     error::{self, Error},
     id_token::{
-        AccessTokenResponse, IDTokenOrRequest, IDTokenProvider, IDTokenRequest, IDTokenResponse,
+        AccessTokenResponse, IdTokenOrRequest, IdTokenProvider, IdTokenRequest, IdTokenResponse,
     },
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
-    IDToken,
+    IdToken,
 };
 
 /// Provides tokens using
@@ -63,7 +63,7 @@ impl EndUserCredentialsInner {
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct IDTokenResponseBody {
+struct IdTokenResponseBody {
     /// The actual token
     id_token: String,
 }
@@ -165,11 +165,11 @@ impl TokenProvider for EndUserCredentialsInner {
     }
 }
 
-impl IDTokenProvider for EndUserCredentialsInner {
-    fn get_id_token(&self, _audience: &str) -> Result<IDTokenOrRequest, Error> {
+impl IdTokenProvider for EndUserCredentialsInner {
+    fn get_id_token(&self, _audience: &str) -> Result<IdTokenOrRequest, Error> {
         let request = self.prepare_token_request()?;
 
-        Ok(IDTokenOrRequest::IDTokenRequest {
+        Ok(IdTokenOrRequest::IdTokenRequest {
             request,
             reason: RequestReason::ParametersChanged,
             audience_hash: 0,
@@ -180,7 +180,7 @@ impl IDTokenProvider for EndUserCredentialsInner {
         &self,
         _audience: &str,
         _response: AccessTokenResponse<S>,
-    ) -> Result<IDTokenRequest, Error>
+    ) -> Result<IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -197,8 +197,8 @@ impl IDTokenProvider for EndUserCredentialsInner {
     fn parse_id_token_response<S>(
         &self,
         _hash: u64,
-        response: IDTokenResponse<S>,
-    ) -> Result<IDToken, Error>
+        response: IdTokenResponse<S>,
+    ) -> Result<IdToken, Error>
     where
         S: AsRef<[u8]>,
     {
@@ -221,8 +221,8 @@ impl IDTokenProvider for EndUserCredentialsInner {
             return Err(Error::HttpStatus(parts.status));
         }
 
-        let token_res: IDTokenResponseBody = serde_json::from_slice(body.as_ref())?;
-        let token = IDToken::new(token_res.id_token)?;
+        let token_res: IdTokenResponseBody = serde_json::from_slice(body.as_ref())?;
+        let token = IdToken::new(token_res.id_token)?;
 
         Ok(token)
     }
