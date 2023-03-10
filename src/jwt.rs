@@ -82,8 +82,10 @@ impl Default for Header {
 /// The algorithms supported for signing/verifying
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize, serde::Deserialize)]
 #[allow(clippy::upper_case_acronyms)]
+#[derive(Default)]
 pub enum Algorithm {
     /// HMAC using SHA-256
+    #[default]
     HS256,
     /// HMAC using SHA-384
     HS384,
@@ -110,11 +112,7 @@ pub enum Algorithm {
     PS512,
 }
 
-impl Default for Algorithm {
-    fn default() -> Self {
-        Algorithm::HS256
-    }
-}
+
 
 /// The supported RSA key formats, see the documentation for [`ring::signature::RsaKeyPair`]
 /// for more information
