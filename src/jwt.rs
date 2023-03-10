@@ -112,8 +112,6 @@ pub enum Algorithm {
     PS512,
 }
 
-
-
 /// The supported RSA key formats, see the documentation for [`ring::signature::RsaKeyPair`]
 /// for more information
 pub enum Key<'a> {
