@@ -12,7 +12,10 @@ use end_user as eu;
 use metadata_server as ms;
 use service_account as sa;
 
-pub use crate::id_token::{IdToken, IdTokenOrRequest, IdTokenProvider};
+pub use crate::id_token::{
+    AccessTokenResponse, IdToken, IdTokenOrRequest, IdTokenProvider, IdTokenRequest,
+    IdTokenResponse,
+};
 pub use crate::token::{Token, TokenOrRequest, TokenProvider};
 pub use {
     end_user::{EndUserCredentials, EndUserCredentialsInfo},
@@ -270,8 +273,8 @@ impl IdTokenProvider for TokenProviderWrapperInner {
     fn get_id_token_with_access_token<S>(
         &self,
         audience: &str,
-        response: crate::id_token::AccessTokenResponse<S>,
-    ) -> Result<crate::id_token::IdTokenRequest, Error>
+        response: AccessTokenResponse<S>,
+    ) -> Result<IdTokenRequest, Error>
     where
         S: AsRef<[u8]>,
     {
