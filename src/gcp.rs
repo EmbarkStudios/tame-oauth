@@ -77,6 +77,7 @@ impl TokenProviderWrapper {
 
 /// Wrapper around the different providers that are supported. Implements both `TokenProvider` and `IdTokenProvider`.
 /// Should not be used directly as it is not cached. Use `TokenProviderWrapper` instead.
+#[derive(Debug)]
 pub enum TokenProviderWrapperInner {
     EndUser(eu::EndUserCredentialsInner),
     Metadata(ms::MetadataServerProviderInner),
