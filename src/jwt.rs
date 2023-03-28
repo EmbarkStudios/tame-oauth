@@ -122,11 +122,10 @@ pub enum Key<'a> {
 
 /// Serializes to JSON and encodes to base64
 pub fn to_jwt_part<T: Serialize>(input: &T) -> Result<String, Error> {
-    let encoded = serde_json::to_string(input)?;
-    Ok(base64::encode_config(
-        encoded.as_bytes(),
-        base64::URL_SAFE_NO_PAD,
-    ))
+    use base64::Engine;
+
+    let json = serde_json::to_string(input)?;
+    Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(json))
 }
 
 /// The actual RSA signing + encoding
@@ -136,6 +135,8 @@ fn sign_rsa(
     key: Key<'_>,
     signing_input: &str,
 ) -> Result<String, Error> {
+    use base64::Engine;
+
     let key_pair = match key {
         Key::Pkcs8(bytes) => {
             signature::RsaKeyPair::from_pkcs8(bytes).map_err(Error::InvalidRsaKeyRejected)?
@@ -149,7 +150,7 @@ fn sign_rsa(
         .sign(alg, &rng, signing_input.as_bytes(), &mut signature)
         .map_err(Error::InvalidRsaKey)?;
 
-    Ok(base64::encode_config(&signature, base64::URL_SAFE_NO_PAD))
+    Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(signature))
 }
 
 /// Take the payload of a JWT, sign it using the algorithm given and return
