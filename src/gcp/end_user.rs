@@ -56,6 +56,13 @@ pub struct EndUserCredentialsInner {
     info: EndUserCredentialsInfo,
 }
 
+impl std::fmt::Debug for EndUserCredentialsInner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EndUserCredentialsInner")
+            .finish_non_exhaustive()
+    }
+}
+
 impl EndUserCredentialsInner {
     pub fn new(info: EndUserCredentialsInfo) -> Self {
         Self { info }

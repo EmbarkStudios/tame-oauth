@@ -70,6 +70,13 @@ pub struct ServiceAccountProviderInner {
     priv_key: Vec<u8>,
 }
 
+impl std::fmt::Debug for ServiceAccountProviderInner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ServiceAccountProviderInner")
+            .finish_non_exhaustive()
+    }
+}
+
 impl ServiceAccountProviderInner {
     /// Creates a new `ServiceAccountAccess` given the provided service
     /// account info. This can fail if the private key is encoded incorrectly.

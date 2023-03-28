@@ -9,12 +9,14 @@ use std::sync::RwLock;
 
 type Hash = u64;
 
+#[derive(Debug)]
 struct Entry<T> {
     hash: Hash,
     token: T,
 }
 
 /// An in-memory cache for caching tokens.
+#[derive(Debug)]
 pub struct TokenCache<T> {
     cache: RwLock<Vec<Entry<T>>>,
 }
@@ -86,6 +88,14 @@ pub struct CachedTokenProvider<P> {
     access_tokens: TokenCache<Token>,
     id_tokens: TokenCache<IdToken>,
     inner: P,
+}
+
+impl<P: std::fmt::Debug> std::fmt::Debug for CachedTokenProvider<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CachedTokenProvider")
+            .field("inner", &self.inner)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<P> CachedTokenProvider<P> {
