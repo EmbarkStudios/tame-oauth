@@ -37,7 +37,7 @@ wasm-web = ["ring/wasm32_c"]
 
 [dependencies]
 # Keep aligned with rustls
-base64 = "0.13"
+base64 = "0.21"
 http = "0.2"
 ring = { version = "0.16", optional = true }
 serde = { version = "1.0", features = ["derive"] }
