@@ -84,11 +84,18 @@ pub trait CacheableToken {
 
 /// Wraps a `TokenProvider` in a cache, only invokes the inner `TokenProvider` if
 /// the token in cache is expired, or if it doesn't exist.
-#[derive(Debug)]
 pub struct CachedTokenProvider<P> {
     access_tokens: TokenCache<Token>,
     id_tokens: TokenCache<IdToken>,
     inner: P,
+}
+
+impl<P: std::fmt::Debug> std::fmt::Debug for CachedTokenProvider<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CachedTokenProvider")
+            .field("inner", &self.inner)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<P> CachedTokenProvider<P> {

@@ -65,10 +65,16 @@ impl ServiceAccountProvider {
 }
 
 /// A token provider for a GCP service account. Should not be used directly as it is not cached. Use `ServiceAccountProvider` instead.
-#[derive(Debug)]
 pub struct ServiceAccountProviderInner {
     info: ServiceAccountInfo,
     priv_key: Vec<u8>,
+}
+
+impl std::fmt::Debug for ServiceAccountProviderInner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ServiceAccountProviderInner")
+            .finish_non_exhaustive()
+    }
 }
 
 impl ServiceAccountProviderInner {
