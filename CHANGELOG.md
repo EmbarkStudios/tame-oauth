@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Added
+- Support for id tokens, a new trait for this was added (`IdTokenProvider`) and implemented for all current token providers so both access tokens and id tokens can be fetched.
+
+### Changed
+- `RequestReason::ScopesChanged` was renamed to `RequestReason::ParametersChanged`
+- [PR#59](https://github.com/EmbarkStudios/tame-oauth/pull/59) update outdated base64 dependency
+- Moved the placement of the `CachedTokenProvider` on `TokenProviderWrapper` so that it wraps the outer type instead of the inner, that way the uncached provider can be accessed via `.inner()`.
+- [PR#61](https://github.com/EmbarkStudios/tame-oauth/pull/61) added debug implementations for all the providers (excludes sensitive data in the output).
+
+### Fixed
+- [PR#57](https://github.com/EmbarkStudios/tame-oauth/pull/57) Documentation improvements
+
 ## [0.8.1] - 2023-01-10
 ### Fixed
 - [PR#54](https://github.com/EmbarkStudios/tame-oauth/pull/54) re-adds `get_account_info` to the outer `ServiceAccountProvider` implementation. It was accidentally removed in #51.
