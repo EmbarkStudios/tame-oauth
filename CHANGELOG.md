@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [PR#57](https://github.com/EmbarkStudios/tame-oauth/pull/57) Documentation improvements
 
+## [0.9.0] - 2023-03-29
+Release failed and way yanked. Released as 0.9.1 instead.
+
 ## [0.8.1] - 2023-01-10
 ### Fixed
 - [PR#54](https://github.com/EmbarkStudios/tame-oauth/pull/54) re-adds `get_account_info` to the outer `ServiceAccountProvider` implementation. It was accidentally removed in #51.
