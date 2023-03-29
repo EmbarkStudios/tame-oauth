@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - ReleaseDate
 ### Added
 - Support for id tokens, a new trait for this was added (`IdTokenProvider`) and implemented for all current token providers so both access tokens and id tokens can be fetched.
+- Added `is_*_provider` methods to `TokenProviderWrapper` for asserting the inner type.
 
 ### Changed
 - `RequestReason::ScopesChanged` was renamed to `RequestReason::ParametersChanged`
