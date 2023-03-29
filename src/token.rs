@@ -119,26 +119,3 @@ impl std::convert::TryInto<http::header::HeaderValue> for Token {
             .map_err(|e| crate::Error::from(http::Error::from(e)))
     }
 }
-
-#[derive(serde::Deserialize, Debug)]
-struct TokenResponse {
-    /// The actual token
-    access_token: String,
-    /// The token type, pretty much always Header
-    token_type: String,
-    /// The time until the token expires and a new one needs to be requested
-    expires_in: i64,
-}
-
-impl From<TokenResponse> for Token {
-    fn from(tr: TokenResponse) -> Self {
-        Self {
-            access_token: tr.access_token,
-            token_type: tr.token_type,
-            refresh_token: String::new(),
-            expires_in: Some(tr.expires_in),
-            expires_in_timestamp: std::time::SystemTime::now()
-                .checked_add(std::time::Duration::from_secs(tr.expires_in as u64)),
-        }
-    }
-}
