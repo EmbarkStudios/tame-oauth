@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.9.1] - 2023-03-29
 ### Added
 - Support for id tokens, a new trait for this was added (`IdTokenProvider`) and implemented for all current token providers so both access tokens and id tokens can be fetched.
 - Added `is_*_provider` methods to `TokenProviderWrapper` for asserting the inner type.
@@ -124,7 +125,8 @@ Release failed and way yanked. Released as 0.9.1 instead.
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.8.1...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.1...HEAD
+[0.9.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.8.1...0.9.1
 [0.8.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.6.0...0.7.0
