@@ -1,6 +1,6 @@
 [package]
 name = "tame-oauth"
-version = "0.9.1"
+version = "0.9.2"
 authors = [
     "Embark <opensource@embark-studios.com>",
     "Jake Shadle <jake.shadle@embark-studios.com>",

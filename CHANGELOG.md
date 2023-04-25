@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.9.2] - 2023-04-25
 ### Fixed
 - [PR#63](https://github.com/EmbarkStudios/tame-oauth/pull/63) Use correct base64 padding when decoding jwt claims from id tokens.
 
@@ -128,7 +129,8 @@ Release failed and was yanked. Released as 0.9.1 instead.
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.1...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.2...HEAD
+[0.9.2]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.8.1...0.9.1
 [0.8.1]: https://github.com/EmbarkStudios/tame-oauth/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.7.0...0.8.0
