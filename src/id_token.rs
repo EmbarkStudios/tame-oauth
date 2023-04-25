@@ -110,11 +110,17 @@ mod tests {
             "exp": 1676641773,
             "iat": 1676638173,
             "iss": "https://accounts.google.com",
-            "sub": "123"
+            "sub": "1234"
         }
         */
 
-        let raw_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYzEyMyIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJteS1hdWQiLCJhenAiOiIxMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNjc2NjQxNzczLCJpYXQiOjE2NzY2MzgxNzMsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsInN1YiI6IjEyMyJ9.plHXcnUDNzWo4PVOAPiwoQJ7QIvecKhmCbfxaIsxpbbGyXFdOdLM2T0Qtbbm2FxwsryabNxv0DY_iQhXlCa1dv2ksusjZAj0MXEE3aEEi65rxxAhE_ew3eU03GheZOjG4oR2gMja8B_8_CoBOK7k7wt_Ggbph0iWIEG6_0YygjJdWHZhxeckn6ym6hQB2MkxYkv0MK2A_68e05edsar1VIvcpgOMcrMwcCNDClclx7A1Ci3pMk1vSdJ-1pHw_GAwb7XCEdB2E9Ccm9N7J0WddvC4W09CxXDYiOcVFxj2Lnr53wquHE0hJcNrp-6tYXKALfXUnx1Nn2XWA0a3ehpHMA";
+        let raw_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYzEyMyIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJteS1hdWQiLCJhenAiOiIxMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNjc2NjQxNzczLCJpYXQiOjE2NzY2MzgxNzMsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsInN1YiI6IjEyMzQifQ.dLGpnM4MzMi3Lexoxo8hTxQWemnXvg4N_0Mn50vVWFfvI6bDu6v35RnXrJLa2SignICXeU9oVeU0z4h9tEjt_4I_SNiJJDLL0kQk045Faehx3dGJdh3IE0_fnMfTlD6K0W2ALLex3kOIg76RhAJ8kDkG1LlblCukheCH6JmYwzgefyTy9pwvnXoNlxbZQsLI5lB1ZufLEn62CA7Qto_e8wwps1t4zzm-GttSku9jREQZOnSaw3zHplPLjw9s7K7paS0qNcV0LsL02uHF5rjmpGuGhI3TkszXD-2SQLoNTfjZhFsCey0TAj2iBxAzY9x6UVHY5temMQW8EKsdDypjzA";
+
+        // Make sure that the claims part base64 is encoded without padding, this is to make sure that padding is handled correctly.
+        // Note that when changing the test token, this might fail, in that case, just add a character somewhere in the claims.
+        let claims = raw_token.split('.').nth(1).unwrap();
+        assert_ne!(claims.len() % 4, 0);
+
         let id_token = IdToken::new(raw_token.to_owned()).unwrap();
 
         assert_eq!(id_token.token, raw_token);
