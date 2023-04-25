@@ -15,7 +15,7 @@ impl IdToken {
         let claims = token.split('.').nth(1).ok_or(Error::InvalidTokenFormat)?;
 
         use base64::Engine;
-        let decoded = base64::engine::general_purpose::STANDARD.decode(claims)?;
+        let decoded = base64::engine::general_purpose::STANDARD_NO_PAD.decode(claims)?;
         let claims: TokenClaims = serde_json::from_slice(&decoded)?;
 
         Ok(Self {
