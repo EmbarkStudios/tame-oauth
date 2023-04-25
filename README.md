@@ -3,7 +3,7 @@
 # `🔐 tame-oauth`
 
 [![Embark](https://img.shields.io/badge/embark-open%20source-blueviolet.svg)](http://embark.games)
-[![Embark](https://img.shields.io/badge/discord-ark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
+[![Embark](https://img.shields.io/badge/discord-embark-%237289da.svg?logo=discord)](https://discord.gg/dAuKfZS)
 [![Crates.io](https://img.shields.io/crates/v/tame-oauth.svg)](https://crates.io/crates/tame-oauth)
 [![Docs](https://docs.rs/tame-oauth/badge.svg)](https://docs.rs/tame-oauth)
 [![dependency status](https://deps.rs/repo/github/EmbarkStudios/tame-oauth/status.svg)](https://deps.rs/repo/github/EmbarkStudios/tame-oauth)
