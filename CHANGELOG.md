@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Fixed
+- [PR#63](https://github.com/EmbarkStudios/tame-oauth/pull/63) Use correct base64 padding when decoding jwt claims from id tokens.
+
 ## [0.9.1] - 2023-03-29
 ### Added
 - Support for id tokens, a new trait for this was added (`IdTokenProvider`) and implemented for all current token providers so both access tokens and id tokens can be fetched.
