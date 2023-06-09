@@ -61,3 +61,8 @@ license-files = [{ path = "COPYRIGHT", hash = 0x39f8ad31 }]
 name = "webpki"
 expression = "ISC"
 license-files = [{ path = "LICENSE", hash = 0x001c7e6c }]
+
+[[licenses.clarify]]
+name = "rustls-webpki"
+expression = "ISC"
+license-files = [{ path = "LICENSE", hash = 0x001c7e6c }]
