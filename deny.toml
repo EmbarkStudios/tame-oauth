@@ -32,6 +32,9 @@ exceptions = [
     ], name = "webpki" },
     { allow = [
         "ISC",
+    ], name = "rustls-webpki" },
+    { allow = [
+        "ISC",
         "MIT",
         "OpenSSL",
     ], name = "ring" },
