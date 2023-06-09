@@ -123,8 +123,8 @@ mod tests {
         assert_ne!(claims.len() % 4, 0);
 
         // assert that the test token includes url safe encoded characters in the base64 encoded claims part
-        assert!(claims.contains("_"));
-        assert!(claims.contains("-"));
+        assert!(claims.contains('_'));
+        assert!(claims.contains('-'));
 
         let id_token = IdToken::new(raw_token.to_owned()).unwrap();
 
