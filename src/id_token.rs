@@ -15,7 +15,7 @@ impl IdToken {
         let claims = token.split('.').nth(1).ok_or(Error::InvalidTokenFormat)?;
 
         use base64::Engine;
-        let decoded = base64::engine::general_purpose::STANDARD_NO_PAD.decode(claims)?;
+        let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(claims)?;
         let claims: TokenClaims = serde_json::from_slice(&decoded)?;
 
         Ok(Self {
@@ -110,16 +110,21 @@ mod tests {
             "exp": 1676641773,
             "iat": 1676638173,
             "iss": "https://accounts.google.com",
-            "sub": "1234"
+            "sub": "1234",
+            "key": "~~~?"
         }
         */
 
-        let raw_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYzEyMyIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJteS1hdWQiLCJhenAiOiIxMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNjc2NjQxNzczLCJpYXQiOjE2NzY2MzgxNzMsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsInN1YiI6IjEyMzQifQ.dLGpnM4MzMi3Lexoxo8hTxQWemnXvg4N_0Mn50vVWFfvI6bDu6v35RnXrJLa2SignICXeU9oVeU0z4h9tEjt_4I_SNiJJDLL0kQk045Faehx3dGJdh3IE0_fnMfTlD6K0W2ALLex3kOIg76RhAJ8kDkG1LlblCukheCH6JmYwzgefyTy9pwvnXoNlxbZQsLI5lB1ZufLEn62CA7Qto_e8wwps1t4zzm-GttSku9jREQZOnSaw3zHplPLjw9s7K7paS0qNcV0LsL02uHF5rjmpGuGhI3TkszXD-2SQLoNTfjZhFsCey0TAj2iBxAzY9x6UVHY5temMQW8EKsdDypjzA";
+        let raw_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYzEyMyIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJteS1hdWQiLCJhenAiOiIxMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNjc2NjQxNzczLCJpYXQiOjE2NzY2MzgxNzMsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsInN1YiI6IjEyMzQiLCJrZXkiOiJ-fn4_In0.RpaD4p5ugL-MH_bkQ3jQ6RPANCDl1nV32xbE5raJF7tZkteQG4ULfRAcVsRnhF3j0yw3e8X9WJJ0rBdnF79MxYbaGB61hl8i6vjoa13zuEw2yaY-pNfEkfsqyf0WcY80_uV3jt-vmcPAlikgtss1YCVl9SW3i2bFXTw_kV-UE8stuCjNcjkORI9hZxEoYZoDJcc4Y8W7JuYD8V8fF8iBtZLCtGCPK64ERrZFkTqLX6FcypEAo6Y5JvmrKGQSMx9q8ozkpqMRTxxfPw6HVTEQJacjkkdJoCrs3zARzzjvm1xyWfJSGGS_g4wismCbDKLtsCSNmugjS-7ruf7rnqUTBg";
 
         // Make sure that the claims part base64 is encoded without padding, this is to make sure that padding is handled correctly.
         // Note that when changing the test token, this might fail, in that case, just add a character somewhere in the claims.
         let claims = raw_token.split('.').nth(1).unwrap();
         assert_ne!(claims.len() % 4, 0);
+
+        // assert that the test token includes url safe encoded characters in the base64 encoded claims part
+        assert!(claims.contains("_"));
+        assert!(claims.contains("-"));
 
         let id_token = IdToken::new(raw_token.to_owned()).unwrap();
 
