@@ -96,8 +96,7 @@ impl ServiceAccountProviderInner {
             },
         );
 
-        use base64::Engine;
-        let key_bytes = base64::engine::general_purpose::STANDARD.decode(key_string)?;
+        let key_bytes = data_encoding::BASE64.decode(key_string.as_bytes())?;
 
         Ok(Self {
             info,

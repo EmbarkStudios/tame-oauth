@@ -14,8 +14,7 @@ impl IdToken {
         // Extract the exp claim from the token, so we can know if the token is expired or not.
         let claims = token.split('.').nth(1).ok_or(Error::InvalidTokenFormat)?;
 
-        use base64::Engine;
-        let decoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(claims)?;
+        let decoded = data_encoding::BASE64URL_NOPAD.decode(claims.as_bytes())?;
         let claims: TokenClaims = serde_json::from_slice(&decoded)?;
 
         Ok(Self {
