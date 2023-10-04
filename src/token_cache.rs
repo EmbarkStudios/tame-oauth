@@ -270,7 +270,7 @@ mod test {
         assert_eq!(expected, hash);
 
         let hash = hash_scopes(
-            &vec![
+            &[
                 "scope1".to_owned(),
                 "scope2".to_owned(),
                 "scope3".to_owned(),

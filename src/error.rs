@@ -7,7 +7,7 @@ pub enum Error {
     #[cfg(feature = "jwt")]
     InvalidKeyFormat,
     /// Unable to deserialize the base64 encoded RSA key
-    Base64Decode(base64::DecodeError),
+    Base64Decode(data_encoding::DecodeError),
     /// An error occurred trying to create an HTTP request
     Http(http::Error),
     /// Failed to authenticate and retrieve an oauth token, and were unable to
@@ -90,8 +90,8 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<base64::DecodeError> for Error {
-    fn from(e: base64::DecodeError) -> Self {
+impl From<data_encoding::DecodeError> for Error {
+    fn from(e: data_encoding::DecodeError) -> Self {
         Error::Base64Decode(e)
     }
 }

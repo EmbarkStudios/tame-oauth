@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- [PR#66](https://github.com/EmbarkStudios/tame-oauth/pull/66) replaced `base64` with `data-encoding`.
+
 ## [0.9.3] - 2023-06-09
 ### Fixed
 - [PR#65](https://github.com/EmbarkStudios/tame-oauth/pull/65) Use url safe base64 when decoding jwt claims from id tokens.
