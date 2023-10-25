@@ -33,12 +33,12 @@ jwt = ["ring"]
 # This enables features in chrono and ring that are necessary to use this library
 # in a wasm32 web (browser) context. If you are using wasm outside the browser
 # you will need to target wasm32-wasi for the requisite functionality (time and random)
-wasm-web = ["ring/wasm32_c"]
+wasm-web = ["ring/wasm32_unknown_unknown_js"]
 
 [dependencies]
 data-encoding = "2.4"
 http = "0.2"
-ring = { version = "0.16", optional = true }
+ring = { version = "0.17", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 twox-hash = { version = "1.5.0", default-features = false }

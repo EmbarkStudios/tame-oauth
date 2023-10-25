@@ -140,7 +140,7 @@ fn sign_rsa(
     };
 
     let key_pair = std::sync::Arc::new(key_pair);
-    let mut signature = vec![0; key_pair.public_modulus_len()];
+    let mut signature = vec![0; key_pair.public().modulus_len()];
     let rng = ring::rand::SystemRandom::new();
     key_pair
         .sign(alg, &rng, signing_input.as_bytes(), &mut signature)
