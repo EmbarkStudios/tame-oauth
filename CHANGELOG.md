@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+### Changed
+- [PR#67](https://github.com/EmbarkStudios/tame-oauth/pull/67) upgraded `ring` from 0.16 -> 0.17.
+
 ## [0.9.4] - 2023-10-04
 ### Changed
 - [PR#66](https://github.com/EmbarkStudios/tame-oauth/pull/66) replaced `base64` with `data-encoding`.

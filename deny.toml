@@ -19,20 +19,11 @@ skip-tree = []
 unlicensed = "deny"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.92
-allow = ["Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016"]
+allow = ["Apache-2.0", "MIT", "Unicode-DFS-2016"]
 exceptions = [
-    { allow = [
-        "MPL-2.0",
-    ], name = "webpki-roots" },
     { allow = [
         "ISC",
     ], name = "untrusted" },
-    { allow = [
-        "ISC",
-    ], name = "webpki" },
-    { allow = [
-        "ISC",
-    ], name = "rustls-webpki" },
     { allow = [
         "ISC",
         "MIT",
