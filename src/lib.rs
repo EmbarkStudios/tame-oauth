@@ -83,6 +83,8 @@
 pub mod gcp;
 #[cfg(feature = "jwt")]
 mod jwt;
+#[cfg(any(feature = "sign-ring", feature = "sign-ssl"))]
+mod sign;
 
 mod error;
 mod id_token;

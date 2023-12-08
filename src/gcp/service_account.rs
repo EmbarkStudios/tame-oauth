@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use super::{
-    jwt::{self, Algorithm, Header, Key},
+    jwt::{self, Header},
     TokenResponse,
 };
 use crate::{
@@ -10,6 +10,7 @@ use crate::{
         AccessTokenRequest, AccessTokenResponse, IdTokenOrRequest, IdTokenProvider, IdTokenRequest,
         IdTokenResponse,
     },
+    sign::{Algorithm, Key},
     token::{RequestReason, Token, TokenOrRequest, TokenProvider},
     token_cache::CachedTokenProvider,
     IdToken,

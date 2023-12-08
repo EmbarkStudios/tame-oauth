@@ -1,5 +1,5 @@
 use crate::Error;
-use ring::signature;
+use crate::sign::{sign, Algorithm, Key};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -79,91 +79,10 @@ impl Default for Header {
     }
 }
 
-/// The algorithms supported for signing/verifying
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize, serde::Deserialize)]
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Default)]
-pub enum Algorithm {
-    /// HMAC using SHA-256
-    #[default]
-    HS256,
-    /// HMAC using SHA-384
-    HS384,
-    /// HMAC using SHA-512
-    HS512,
-
-    /// ECDSA using SHA-256
-    ES256,
-    /// ECDSA using SHA-384
-    ES384,
-
-    /// RSASSA-PKCS1-v1_5 using SHA-256
-    RS256,
-    /// RSASSA-PKCS1-v1_5 using SHA-384
-    RS384,
-    /// RSASSA-PKCS1-v1_5 using SHA-512
-    RS512,
-
-    /// RSASSA-PSS using SHA-256
-    PS256,
-    /// RSASSA-PSS using SHA-384
-    PS384,
-    /// RSASSA-PSS using SHA-512
-    PS512,
-}
-
-/// The supported RSA key formats, see the documentation for [`ring::signature::RsaKeyPair`]
-/// for more information
-pub enum Key<'a> {
-    /// An unencrypted PKCS#8-encoded key. Can be used with both ECDSA and RSA
-    /// algorithms when signing. See ring for information.
-    Pkcs8(&'a [u8]),
-}
-
 /// Serializes to JSON and encodes to base64
 pub fn to_jwt_part<T: Serialize>(input: &T) -> Result<String, Error> {
     let json = serde_json::to_string(input)?;
     Ok(data_encoding::BASE64URL_NOPAD.encode(json.as_bytes()))
-}
-
-/// The actual RSA signing + encoding
-/// Taken from Ring doc <https://briansmith.org/rustdoc/ring/signature/index.html>
-fn sign_rsa(
-    alg: &'static dyn signature::RsaEncoding,
-    key: Key<'_>,
-    signing_input: &str,
-) -> Result<String, Error> {
-    let key_pair = match key {
-        Key::Pkcs8(bytes) => {
-            signature::RsaKeyPair::from_pkcs8(bytes).map_err(Error::InvalidRsaKeyRejected)?
-        }
-    };
-
-    let key_pair = std::sync::Arc::new(key_pair);
-    let mut signature = vec![0; key_pair.public().modulus_len()];
-    let rng = ring::rand::SystemRandom::new();
-    key_pair
-        .sign(alg, &rng, signing_input.as_bytes(), &mut signature)
-        .map_err(Error::InvalidRsaKey)?;
-
-    Ok(data_encoding::BASE64_NOPAD.encode(&signature))
-}
-
-/// Take the payload of a JWT, sign it using the algorithm given and return
-/// the base64 url safe encoded of the result.
-///
-/// Only use this function if you want to do something other than JWT.
-pub fn sign(signing_input: &str, key: Key<'_>, algorithm: Algorithm) -> Result<String, Error> {
-    match algorithm {
-        Algorithm::RS256 => sign_rsa(&signature::RSA_PKCS1_SHA256, key, signing_input),
-        Algorithm::RS384 => sign_rsa(&signature::RSA_PKCS1_SHA384, key, signing_input),
-        Algorithm::RS512 => sign_rsa(&signature::RSA_PKCS1_SHA512, key, signing_input),
-
-        Algorithm::PS256 => sign_rsa(&signature::RSA_PSS_SHA256, key, signing_input),
-        Algorithm::PS384 => sign_rsa(&signature::RSA_PSS_SHA384, key, signing_input),
-        Algorithm::PS512 => sign_rsa(&signature::RSA_PSS_SHA512, key, signing_input),
-        _ => panic!("Unsupported algorithm {:?}", algorithm),
-    }
 }
 
 pub fn encode<T: Serialize>(header: &Header, claims: &T, key: Key<'_>) -> Result<String, Error> {

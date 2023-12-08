@@ -18,11 +18,15 @@ pub enum Error {
     /// Failed to authenticate and retrieve an oauth token
     Auth(AuthError),
     /// The RSA key seems valid, but is unable to sign a payload
-    #[cfg(feature = "jwt")]
+    #[cfg(feature = "sign-ring")]
     InvalidRsaKey(ring::error::Unspecified),
+    #[cfg(feature = "sign-ssl")]
+    InvalidRsaKey(openssl::error::ErrorStack),
     /// The RSA key is invalid and cannot be used to sign
-    #[cfg(feature = "jwt")]
+    #[cfg(feature = "sign-ring")]
     InvalidRsaKeyRejected(ring::error::KeyRejected),
+    #[cfg(feature = "sign-ssl")]
+    InvalidRsaKeyRejected(openssl::error::ErrorStack),
     /// A mutex has been poisoned due to a panic while a lock was held
     Poisoned,
     /// An I/O error occurred when reading credentials
