@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.10.0] - 2024-03-21
 ### Changed
 - [PR#72](https://github.com/EmbarkStudios/tame-oauth/pull/72) update `http` -> 1.1.0.
 
@@ -144,7 +145,8 @@ Release failed and was yanked. Released as 0.9.1 instead.
 - Initial add of `tame-oauth`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.6...HEAD
+[Unreleased]: https://github.com/EmbarkStudios/tame-oauth/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.6...0.10.0
 [0.9.6]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.4...0.9.6
 [0.9.4]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.3...0.9.4
 [0.9.3]: https://github.com/EmbarkStudios/tame-oauth/compare/0.9.2...0.9.3
